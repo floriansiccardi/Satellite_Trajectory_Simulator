@@ -11,6 +11,7 @@ class Object:
 
         # Position, Vitesse et Accélération :
         self.x, self.v, self.a = np.array(x), np.array(v), np.array(a)
+        self.alive = True
 
         # Identification :
         self.id = randint(0, 99999)
