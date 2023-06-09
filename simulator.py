@@ -19,6 +19,8 @@ class Simulator:
         self.planets = []
         self.saves = {}
 
+        self.t0 = None
+
     def add(self, obj):
         if type(obj) == Satellite:
             obj.linkto(simulator=self)
@@ -42,13 +44,11 @@ class Simulator:
     def run(self, time_max=60, iteration_max=10**8):
         print(f" > Start simulation ...")
         self.running = True
-        t0 = time()
+        self.t0 = time()
         while self.running:
             self.step()
             self.iteration += 1
-            if time()-t0 >= time_max or self.iteration >= iteration_max:
-                print(f"   Simulation ended after {self.iteration} iterations and {round(time()-t0,2)} sec")
-                print(f"   Real elapsed time : {timedelta(seconds=self.iteration * self.dt)}")
+            if time()-self.t0 >= time_max or self.iteration >= iteration_max:
                 self.stop()
 
     def step(self):
@@ -58,6 +58,8 @@ class Simulator:
 
     def stop(self):
         self.running = False
+        print(f"   Simulation ended after {self.iteration} iterations and {round(time() - self.t0, 2)} sec")
+        print(f"   Real elapsed time : {timedelta(seconds=self.iteration * self.dt)}")
         for key in self.saves.keys():
             self.saves[key] = np.array(self.saves[key])
 
