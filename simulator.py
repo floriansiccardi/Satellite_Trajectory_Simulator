@@ -56,18 +56,22 @@ class Simulator:
             sat.step(planets=self.planets)
             self.saves[sat.name].append(list(sat.x))
 
-    def stop(self):
+        def stop(self):
         self.running = False
+        print(f"   Simulation ended after {self.iteration} iterations and {round(time() - self.t0, 2)} sec")
+        print(f"   Real elapsed time : {timedelta(seconds=self.iteration * self.dt)}")
         for key in self.saves.keys():
             self.saves[key] = np.array(self.saves[key])
 
-    def plot(self):
+    def plot(self, trajectory=False):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         for pln in self.planets:
             fig, ax = pln.plot(fig=fig, ax=ax, display=False)
         for sat in self.satellites:
             fig, ax = sat.plot(fig=fig, ax=ax, display=False)
+            if trajectory:
+                ax.plot(self.saves[sat.name][:, 0], self.saves[sat.name][:, 1], self.saves[sat.name][:, 2], '-r')
         ax.axis('equal')
         ax.set_xlabel('X')
         ax.set_ylabel('Y')
@@ -75,16 +79,5 @@ class Simulator:
         plt.show()
 
     def trajectory(self):
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        for pln in self.planets:
-            fig, ax = pln.plot(fig=fig, ax=ax, display=False)
-        for sat in self.satellites:
-            fig, ax = sat.plot(fig=fig, ax=ax, display=False)
-            ax.plot(self.saves[sat.name][:, 0], self.saves[sat.name][:, 1], self.saves[sat.name][:, 2], '-r')
-        ax.axis('equal')
-        ax.set_xlabel('X')
-        ax.set_ylabel('Y')
-        ax.set_zlabel('Z')
-        plt.show()
+        self.plot(trajectory=True)
 
