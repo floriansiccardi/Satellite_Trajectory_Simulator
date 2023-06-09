@@ -8,7 +8,6 @@ class Planet(Object):
     def __init__(self, radius, mass, name='unamed', x=(0, 0, 0), v=(0, 0, 0), a=(0, 0, 0)):
         super().__init__(mass=mass, x=x, v=v, a=a, name=name)
         self.radius = radius
-        self.mass = mass
 
     def plot(self, fig=None, ax=None, display=True, N_points=200):
         if fig is None or ax is None:
