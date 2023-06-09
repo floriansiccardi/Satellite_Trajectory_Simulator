@@ -37,6 +37,7 @@ class STL_Reader:
         # Plot the mesh
         axes.add_collection3d(Poly3DCollection(self.faces))
         axes.scatter(self.vertices[:, 0], self.vertices[:, 1], self.vertices[:, 2])
+        print(self.vertices)
 
         # Set plot limits and labels
         axes.set_xlim3d(np.min(self.vertices[:, 0]), np.max(self.vertices[:, 0]))
@@ -48,9 +49,3 @@ class STL_Reader:
 
         # Show the plot
         plt.show()
-
-
-stl = STL_Reader()
-stl.open(path='iss_v2.stl')
-print(stl.get_GC())
-stl.show()
