@@ -56,7 +56,7 @@ class Simulator:
             sat.step(planets=self.planets)
             self.saves[sat.name].append(list(sat.x))
 
-    def stop(self):
+        def stop(self):
         self.running = False
         print(f"   Simulation ended after {self.iteration} iterations and {round(time() - self.t0, 2)} sec")
         print(f"   Real elapsed time : {timedelta(seconds=self.iteration * self.dt)}")

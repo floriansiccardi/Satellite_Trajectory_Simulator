@@ -32,6 +32,14 @@ class Object:
                 u = -d / np.linalg.norm(d)  # Vecteur direction normalisé (sens opposé)
                 a = a + u * 6.67*10**-11 * pln.mass / (np.linalg.norm(d) ** 2)    # a = F / m
         return a
+    
+    def check_for_collision(self, planets):
+        for pln in planets:
+            if np.linalg.norm(self.x - pln.x) < pln.radius:
+                print(f"   Satellite {self.name} crashed into {pln.name} after {time()-self.simulator.t0} sec alive")
+                self.alive = False
+                self.x = pln.x + (self.x - pln.x) / np.linalg.norm(self.x - pln.x) * pln.radius
+                break
 
     def check_for_collision(self, planets):
         for pln in planets:
