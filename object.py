@@ -1,5 +1,6 @@
 import numpy as np
 from random import randint
+from time import time
 
 
 class Object:
@@ -40,8 +41,18 @@ class Object:
                 self.x = pln.x + (self.x - pln.x) / np.linalg.norm(self.x - pln.x) * pln.radius
                 break
 
+    def check_for_collision(self, planets):
+        for pln in planets:
+            if np.linalg.norm(self.x - pln.x) < pln.radius:
+                print(f"   Satellite {self.name} crashed into {pln.name} after {time()-self.simulator.t0} sec alive")
+                self.alive = False
+                self.x = pln.x + (self.x - pln.x) / np.linalg.norm(self.x - pln.x) * pln.radius
+                break
+
     def step(self, planets):
-        self.a = self.get_a(planets=planets)
-        self.x, self.v, self.a = self.simulator.integrate(f=self.x, df=self.v, ddf=self.a)
-        self.check_for_collision(planets=planets)
+        if self.alive:
+            self.a = self.get_a(planets=planets)
+            self.x, self.v, self.a = self.simulator.integrate(f=self.x, df=self.v, ddf=self.a)
+            self.check_for_collision(planets=planets)
+
 
