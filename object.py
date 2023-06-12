@@ -5,7 +5,7 @@ from time import time
 
 class Object:
 
-    def __init__(self, mass, name='unamed', x=(0, 0, 0), v=(0, 0, 0), a=(0, 0, 0)):
+    def __init__(self, mass, name='unnamed', x=(0, 0, 0), v=(0, 0, 0), a=(0, 0, 0)):
         self.mass = mass
         self.simulator = None
         self.scale = 1
@@ -40,19 +40,5 @@ class Object:
                 self.alive = False
                 self.x = pln.x + (self.x - pln.x) / np.linalg.norm(self.x - pln.x) * pln.radius
                 break
-
-    def check_for_collision(self, planets):
-        for pln in planets:
-            if np.linalg.norm(self.x - pln.x) < pln.radius:
-                print(f"   Satellite {self.name} crashed into {pln.name} after {time()-self.simulator.t0} sec alive")
-                self.alive = False
-                self.x = pln.x + (self.x - pln.x) / np.linalg.norm(self.x - pln.x) * pln.radius
-                break
-
-    def step(self, planets):
-        if self.alive:
-            self.a = self.get_a(planets=planets)
-            self.x, self.v, self.a = self.simulator.integrate(f=self.x, df=self.v, ddf=self.a)
-            self.check_for_collision(planets=planets)
 
 
