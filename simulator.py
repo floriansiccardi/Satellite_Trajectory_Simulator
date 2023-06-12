@@ -41,22 +41,49 @@ class Simulator:
     def integrate(self, f, df, ddf):
         return tools.euler(f, df, ddf, self.dt)
 
-    def run(self, time_max=60, iteration_max=10**8):
+    def count_alive(self):
+        count = 0
+        for sat in self.satellites:
+            count += sat.alive
+        return count
+
+    def run(self, time_max=60, iteration_max=10**8, infos=0):
         print(f" > Start simulation ...")
         self.running = True
         self.t0 = time()
         while self.running:
-            self.step()
-            self.iteration += 1
-            if time()-self.t0 >= time_max or self.iteration >= iteration_max:
-                self.stop()
+            self.step(infos)
+            if infos and self.iteration % infos == 0:
+                for sat in self.satellites:
+                    print(f" - Altitude de {sat.name} selon {sat.planet_ref.name} : {round(sat.get_altitude())} m")
+                    print(f"   Speed : {round(np.linalg.norm(sat.v))} m/s")
 
-    def step(self):
+            self.iteration += 1
+            if time()-self.t0 >= time_max or self.iteration >= iteration_max or self.count_alive() == 0:
+                self.stop()
+                return False
+        return True
+
+    def step(self, infos=False):
         for sat in self.satellites:
             sat.step(planets=self.planets)
-            self.saves[sat.name].append(list(sat.x))
+            self.saves[sat.name].append(sat.x)
 
-        def stop(self):
+            # Controls for next step :
+            if not sat.controls is None:
+                for controler in sat.controls.keys():
+                    for step in sat.controls[controler]:  # step = (iteration, value)
+                        iteration, value = step[0], step[1]
+                        if self.iteration == iteration:
+                            if infos:
+                                print(f"   | set {controler} to {value}")
+                            if '-' in controler:
+                                if controler[:8] == 'thruster':
+                                    sat.get_thruster(controler[9:]).on(power=value)
+                            else:
+                                setattr(sat, controler, value)
+
+    def stop(self):
         self.running = False
         print(f"   Simulation ended after {self.iteration} iterations and {round(time() - self.t0, 2)} sec")
         print(f"   Real elapsed time : {timedelta(seconds=self.iteration * self.dt)}")
@@ -80,4 +107,37 @@ class Simulator:
 
     def trajectory(self):
         self.plot(trajectory=True)
+
+    def run_live_simulation(self, time_max=60, iteration_max=10**8, infos=0, trajectory=False):
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+
+        print(f" > Start simulation ...")
+        self.running = True
+        self.t0 = time()
+        while self.running:
+            self.step(infos=infos)
+            if infos and self.iteration % infos == 0:
+                for sat in self.satellites:
+                    print(f" - Altitude de {sat.name} selon {sat.planet_ref.name} : {round(sat.get_altitude())} m")
+                    print(f"   Speed : {round(np.linalg.norm(sat.v))} m/s")
+
+            self.iteration += 1
+            if time() - self.t0 >= time_max or self.iteration >= iteration_max or self.count_alive() == 0:
+                self.stop()
+
+            plt.cla()
+            ax.axis('equal')
+            ax.set_xlabel('X')
+            ax.set_ylabel('Y')
+            ax.set_zlabel('Z')
+            for pln in self.planets:
+                fig, ax = pln.plot(fig=fig, ax=ax, display=False)
+            for sat in self.satellites:
+                fig, ax = sat.plot(fig=fig, ax=ax, display=False)
+                if trajectory:
+                    saves_arr = np.array(self.saves[sat.name])
+                    ax.plot(saves_arr[:, 0], saves_arr[:, 1], saves_arr[:, 2], '-r')
+            plt.pause(0.01)
+        plt.show()
 

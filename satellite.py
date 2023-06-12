@@ -1,18 +1,84 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from object import Object
+from tools import rotation_matrix, zero, from_other_base
 
 
 class Satellite(Object):
 
-    def __init__(self, mass, name='unamed', x=(0, 0, 0), v=(0, 0, 0), a=(0, 0, 0), size=np.array([1, 1, 1])):
+    def __init__(self, mass, name='unamed', x=(0, 0, 0), v=(0, 0, 0), a=(0, 0, 0), size=(1, 1, 1), planet_ref=None):
         super().__init__(mass=mass, x=x, v=v, a=a, name=name)
-        self.size = size
+        self.size = np.array(size)
         self.color = 'r'
+
+        # Positions de référence
+        self.ux, self.uy, self.uz = np.array([1, 0, 0]), np.array([0, 1, 0]), np.array([0, 0, 1])
+        self.planet_ref = planet_ref
+        self.islanded = True     # False une fois décollé, pour éviter de détecter un crash avant même le décolage
+        self.istakingoff = False    # Période courte de transition de landed = True vers False
+
+        # Thruster
+        self.thrusters = []                 # Liste des thrusters
+        self.thrust = zero()   # Force en N
+        self.torque = zero()
+        self.inertia = 1/12 * self.mass * np.array([self.size[1]**2 + self.size[2]**2, self.size[0]**2 + self.size[2]**2, self.size[0]**2 + self.size[1]**2])
+        self.a_ang, self.v_ang, self.x_ang = zero(), zero(), zero()
+
+        # Controlers :
+        self.controls = None
 
     def set_scale(self, scale):
         self.scale = scale
         self.size = np.dot(scale, self.size)
+
+    def set_planet_ref(self, planet_ref):
+        self.planet_ref = planet_ref
+
+    def add_thruster(self, thruster):
+        self.thrusters.append(thruster)
+
+    def get_thruster(self, name):
+        for thruster in self.thrusters:
+            if thruster.name == name:
+                return thruster
+
+    def get_altitude(self):
+        if self.planet_ref is None:
+            print(f" /!\\ Aucune planète référence n'a été donné. L'altitude retournée est donc nulle")
+            return 0
+        return np.linalg.norm(self.x - self.planet_ref.x) - self.planet_ref.radius
+
+    def get_axes(self, dalpha=(0, 0, 0)):
+        for axe, delta in enumerate(dalpha):
+            if delta != 0:
+                rot = rotation_matrix(angle=delta, axe=axe)
+                # Note : tourner x autour de x n'a aucun intêret, possibilité d'optimiser ça
+                self.ux, self.uy, self.uz = np.dot(rot, self.ux), np.dot(rot, self.uy), np.dot(rot, self.uz)
+        return self.ux, self.uy, self.uz
+
+    def get_thrust(self):
+        self.thrust, self.torque = zero(), zero()
+        # Update thrusters :
+        for thruster in self.thrusters:
+            self.thrust = self.thrust + thruster.thrust
+            self.torque = self.torque + thruster.torque
+        self.thrust = from_other_base(point=self.thrust, base=[self.ux, self.uy, self.uz])
+        self.torque = from_other_base(point=self.torque, base=[self.ux, self.uy, self.uz])
+
+        return self.thrust, self.torque
+
+    def step(self, planets):
+        if self.alive and (not self.islanded or self.istakingoff):
+            F, C = self.get_thrust()
+            # Force :
+            self.a = self.get_a(planets=planets) + F / self.mass
+            self.x, self.v, self.a = self.simulator.integrate(f=self.x, df=self.v, ddf=self.a)
+            # Couple :
+            self.a_ang = C / self.inertia
+            self.x_ang, self.v_ang, self.a_ang = self.simulator.integrate(f=zero(), df=self.v_ang, ddf=self.a_ang)
+            self.get_axes(dalpha=self.x_ang)
+            if not (self.islanded or self.istakingoff):
+                self.check_for_collision(planets=planets)
 
     def plot(self, fig=None, ax=None, display=True):
         if fig is None or ax is None:
@@ -20,15 +86,11 @@ class Satellite(Object):
             ax = fig.add_subplot(111, projection='3d')
 
         # Coordonnées des sommets du cube
-        vertices = np.array([[-self.size[0] / 2, -self.size[1] / 2, -self.size[2] / 2],  # V0
-                             [ self.size[0] / 2, -self.size[1] / 2, -self.size[2] / 2],  # V1
-                             [ self.size[0] / 2,  self.size[1] / 2, -self.size[2] / 2],  # V2
-                             [-self.size[0] / 2,  self.size[1] / 2, -self.size[2] / 2],  # V3
-                             [-self.size[0] / 2, -self.size[1] / 2,  self.size[2] / 2],  # V4
-                             [ self.size[0] / 2, -self.size[1] / 2,  self.size[2] / 2],  # V5
-                             [ self.size[0] / 2,  self.size[1] / 2,  self.size[2] / 2],  # V6
-                             [-self.size[0] / 2,  self.size[1] / 2,  self.size[2] / 2]]) # V7
-        vertices += self.x
+        vertices = np.zeros((8, 3))
+        vertices[1], vertices[2] = self.size[0] * self.ux, self.size[0] * self.ux + self.size[1] * self.uy
+        vertices[3] = self.size[1] * self.uy
+        vertices[4:] = vertices[:4] + self.size[2] * self.uz
+        vertices += self.x - np.dot(np.array(self.size), np.array([self.ux, self.uy, self.uz])) / 2
 
         # Indices des faces du cube
         faces = np.array([[0, 1, 2, 3], [4, 5, 6, 7],  [0, 1, 5, 4],

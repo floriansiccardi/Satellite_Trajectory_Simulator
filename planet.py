@@ -9,7 +9,7 @@ class Planet(Object):
         super().__init__(mass=mass, x=x, v=v, a=a, name=name)
         self.radius = radius
 
-    def plot(self, fig=None, ax=None, display=True, N_points=200):
+    def plot(self, fig=None, ax=None, display=True, N_points=600):
         if fig is None or ax is None:
             fig = plt.figure()
             ax = fig.add_subplot(111, projection='3d')
