@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from object import Object
+from thruster import Thruster
 from tools import rotation_matrix, zero, from_other_base
 
 
@@ -9,12 +10,12 @@ class Satellite(Object):
     def __init__(self, mass, name='unamed', x=(0, 0, 0), v=(0, 0, 0), a=(0, 0, 0), size=(1, 1, 1), planet_ref=None):
         super().__init__(mass=mass, x=x, v=v, a=a, name=name)
         self.size = np.array(size)
-        self.color = 'r'
+        self.color = 'g'
 
         # Positions de référence
         self.ux, self.uy, self.uz = np.array([1, 0, 0]), np.array([0, 1, 0]), np.array([0, 0, 1])
         self.planet_ref = planet_ref
-        self.islanded = True     # False une fois décollé, pour éviter de détecter un crash avant même le décolage
+        self.islanded = False     # False une fois décollé, pour éviter de détecter un crash avant même le décolage
         self.istakingoff = False    # Période courte de transition de landed = True vers False
 
         # Thruster
@@ -34,10 +35,13 @@ class Satellite(Object):
     def set_planet_ref(self, planet_ref):
         self.planet_ref = planet_ref
 
-    def add_thruster(self, thruster):
-        self.thrusters.append(thruster)
+    def add(self, obj):
+        if type(obj) == Thruster:
+            self.thrusters.append(obj)
+        else:
+            print(f" > Impossible d'ajouter ce type d'objet à la simulation")
 
-    def get_thruster(self, name):
+    def get(self, name):
         for thruster in self.thrusters:
             if thruster.name == name:
                 return thruster

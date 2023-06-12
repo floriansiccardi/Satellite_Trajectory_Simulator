@@ -55,8 +55,9 @@ class Simulator:
             self.step(infos)
             if infos and self.iteration % infos == 0:
                 for sat in self.satellites:
-                    print(f" - Altitude de {sat.name} selon {sat.planet_ref.name} : {round(sat.get_altitude())} m")
-                    print(f"   Speed : {round(np.linalg.norm(sat.v))} m/s")
+                    if not sat.planet_ref is None:
+                        print(f" - Altitude de {sat.name} selon {sat.planet_ref.name} : {round(sat.get_altitude())} m")
+                        print(f"   Speed : {round(np.linalg.norm(sat.v))} m/s")
 
             self.iteration += 1
             if time()-self.t0 >= time_max or self.iteration >= iteration_max or self.count_alive() == 0:
@@ -79,7 +80,7 @@ class Simulator:
                                 print(f"   | set {controler} to {value}")
                             if '-' in controler:
                                 if controler[:8] == 'thruster':
-                                    sat.get_thruster(controler[9:]).on(power=value)
+                                    sat.get(controler[9:]).on(power=value)
                             else:
                                 setattr(sat, controler, value)
 
@@ -98,7 +99,7 @@ class Simulator:
         for sat in self.satellites:
             fig, ax = sat.plot(fig=fig, ax=ax, display=False)
             if trajectory:
-                ax.plot(self.saves[sat.name][:, 0], self.saves[sat.name][:, 1], self.saves[sat.name][:, 2], '-r')
+                ax.plot(self.saves[sat.name][:, 0], self.saves[sat.name][:, 1], self.saves[sat.name][:, 2],  '-' + sat.color)
         ax.axis('equal')
         ax.set_xlabel('X')
         ax.set_ylabel('Y')
@@ -119,8 +120,9 @@ class Simulator:
             self.step(infos=infos)
             if infos and self.iteration % infos == 0:
                 for sat in self.satellites:
-                    print(f" - Altitude de {sat.name} selon {sat.planet_ref.name} : {round(sat.get_altitude())} m")
-                    print(f"   Speed : {round(np.linalg.norm(sat.v))} m/s")
+                    if not sat.planet_ref is None:
+                        print(f" - Altitude de {sat.name} selon {sat.planet_ref.name} : {round(sat.get_altitude())} m")
+                        print(f"   Speed : {round(np.linalg.norm(sat.v))} m/s")
 
             self.iteration += 1
             if time() - self.t0 >= time_max or self.iteration >= iteration_max or self.count_alive() == 0:
@@ -137,7 +139,7 @@ class Simulator:
                 fig, ax = sat.plot(fig=fig, ax=ax, display=False)
                 if trajectory:
                     saves_arr = np.array(self.saves[sat.name])
-                    ax.plot(saves_arr[:, 0], saves_arr[:, 1], saves_arr[:, 2], '-r')
+                    ax.plot(saves_arr[:, 0], saves_arr[:, 1], saves_arr[:, 2], '-' + sat.color)
             plt.pause(0.01)
         plt.show()
 
