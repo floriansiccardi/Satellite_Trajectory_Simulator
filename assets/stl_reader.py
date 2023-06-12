@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from stl import mesh
 
 
-class STL_Reader:
+class STLReader:
 
     def __init__(self, path=None):
         self.path, self.data, self.isLoaded = None, None, False
@@ -32,20 +32,23 @@ class STL_Reader:
     def show(self):
         # Create a new plot
         figure = plt.figure()
-        axes = Axes3D(figure)
+        axes = figure.add_subplot(111, projection='3d')
 
         # Plot the mesh
         axes.add_collection3d(Poly3DCollection(self.faces))
-        axes.scatter(self.vertices[:, 0], self.vertices[:, 1], self.vertices[:, 2])
+        # axes.scatter(self.vertices[:, 0], self.vertices[:, 1], self.vertices[:, 2])
         print(self.vertices)
 
         # Set plot limits and labels
-        axes.set_xlim3d(np.min(self.vertices[:, 0]), np.max(self.vertices[:, 0]))
-        axes.set_ylim3d(np.min(self.vertices[:, 1]), np.max(self.vertices[:, 1]))
-        axes.set_zlim3d(np.min(self.vertices[:, 2]), np.max(self.vertices[:, 2]))
         axes.set_xlabel('X')
         axes.set_ylabel('Y')
         axes.set_zlabel('Z')
 
+        # # Auto scale to the mesh size
+        scale = self.data.points.flatten()
+        axes.auto_scale_xyz(scale, scale, scale)
+
         # Show the plot
         plt.show()
+
+
