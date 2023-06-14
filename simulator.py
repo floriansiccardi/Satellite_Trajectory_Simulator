@@ -91,7 +91,7 @@ class Simulator:
         for key in self.saves.keys():
             self.saves[key] = np.array(self.saves[key])
 
-    def plot(self, trajectory=False):
+    def plot(self, trajectory=True):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         for pln in self.planets:
@@ -106,28 +106,10 @@ class Simulator:
         ax.set_zlabel('Z')
         plt.show()
 
-    def trajectory(self):
-        self.plot(trajectory=True)
-
-    def run_live_simulation(self, time_max=60, iteration_max=10**8, infos=0, trajectory=False):
+    def animation(self, trajectory=True, step=1):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
-
-        print(f" > Start simulation ...")
-        self.running = True
-        self.t0 = time()
-        while self.running:
-            self.step(infos=infos)
-            if infos and self.iteration % infos == 0:
-                for sat in self.satellites:
-                    if not sat.planet_ref is None:
-                        print(f" - Altitude de {sat.name} selon {sat.planet_ref.name} : {round(sat.get_altitude())} m")
-                        print(f"   Speed : {round(np.linalg.norm(sat.v))} m/s")
-
-            self.iteration += 1
-            if time() - self.t0 >= time_max or self.iteration >= iteration_max or self.count_alive() == 0:
-                self.stop()
-
+        for i in range(0, self.iteration, step):
             plt.cla()
             ax.axis('equal')
             ax.set_xlabel('X')
@@ -136,10 +118,12 @@ class Simulator:
             for pln in self.planets:
                 fig, ax = pln.plot(fig=fig, ax=ax, display=False)
             for sat in self.satellites:
+                sat.x = self.saves[sat.name][i]
                 fig, ax = sat.plot(fig=fig, ax=ax, display=False)
                 if trajectory:
-                    saves_arr = np.array(self.saves[sat.name])
-                    ax.plot(saves_arr[:, 0], saves_arr[:, 1], saves_arr[:, 2], '-' + sat.color)
+                    traj = self.saves[sat.name][:i]
+                    ax.plot(traj[:, 0], traj[:, 1], traj[:, 2], '-' + sat.color)
             plt.pause(0.01)
         plt.show()
+
 

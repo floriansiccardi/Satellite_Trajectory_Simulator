@@ -32,5 +32,5 @@ mySat.controls = {
 simu.add(mySat)
 
 #simu.run(time_max=10, iteration_max=1000, infos=50)
-#simu.trajectory()
-simu.run_live_simulation(time_max=120, iteration_max=1000, infos=50, trajectory=True)
+#simu.plot()
+#simu.animation(step=5)
