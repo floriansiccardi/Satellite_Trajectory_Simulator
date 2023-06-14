@@ -1,5 +1,4 @@
 import numpy as np
-from main import mySat
 
 class Controler:
 
@@ -69,7 +68,3 @@ class Controler:
                     power = 2*np.pi * self.sat.inertia[axe] / (n * dt * period * thruster.torque_max[axe])
                     if 0 <= power <= 1.:            # Power de 0% à 100% (min et max)
                         return {'power': power, 'niteration': n, 'thruster_name': thruster.name}
-
-
-ctr = Controler(sat=mySat)
-print(f'Result : {ctr.power_for_speed(speed=1000, dt=10, niteration=1)}')

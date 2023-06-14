@@ -20,6 +20,9 @@ class Simulator:
         self.saves = {}
 
         self.t0 = None
+        self.time = 0
+
+        self.controls = None
 
     def add(self, obj):
         if type(obj) == Satellite:
@@ -47,42 +50,44 @@ class Simulator:
             count += sat.alive
         return count
 
-    def run(self, time_max=60, iteration_max=10**8, infos=0):
+    def run(self, duration_max=60, time_max=10**6, infos=0):
         print(f" > Start simulation ...")
         self.running = True
         self.t0 = time()
+        if infos < 1:
+            infos = round(infos * time_max)
+        next_info = 0
         while self.running:
             self.step(infos)
-            if infos and self.iteration % infos == 0:
+            if infos and self.time >= next_info:
+                next_info += infos
                 for sat in self.satellites:
                     if not sat.planet_ref is None:
                         print(f" - Altitude de {sat.name} selon {sat.planet_ref.name} : {round(sat.get_altitude())} m")
-                        print(f"   Speed : {round(np.linalg.norm(sat.v))} m/s")
+                        print(f"   Speed : {round(np.linalg.norm(sat.v))} m/s" + ' '*30 + f"({self.time} sec)")
 
             self.iteration += 1
-            if time()-self.t0 >= time_max or self.iteration >= iteration_max or self.count_alive() == 0:
+            if time()-self.t0 >= duration_max or self.time >= time_max or self.count_alive() == 0:
                 self.stop()
                 return False
         return True
 
     def step(self, infos=False):
         for sat in self.satellites:
-            sat.step(planets=self.planets)
+            sat.step(planets=self.planets, infos=infos)
             self.saves[sat.name].append(sat.x)
+        self.time += self.dt
 
-            # Controls for next step :
-            if not sat.controls is None:
-                for controler in sat.controls.keys():
-                    for step in sat.controls[controler]:  # step = (iteration, value)
-                        iteration, value = step[0], step[1]
-                        if self.iteration == iteration:
-                            if infos:
-                                print(f"   | set {controler} to {value}")
-                            if '-' in controler:
-                                if controler[:8] == 'thruster':
-                                    sat.get(controler[9:]).on(power=value)
-                            else:
-                                setattr(sat, controler, value)
+        # Controls for next step :
+        if not self.controls is None:
+            for controler in self.controls.keys():
+                for step in self.controls[controler]:  # step = (time, value)
+                    time, value = step[0], step[1]
+                    if self.time >= time:
+                        if infos:
+                            print(f"   | set {controler} to {value}")
+                        setattr(sat, controler, value)
+                        self.controls[controler].remove(step)
 
     def stop(self):
         self.running = False
