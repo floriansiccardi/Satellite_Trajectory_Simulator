@@ -18,14 +18,19 @@ class Simulator:
         self.satellites = []
         self.planets = []
         self.saves = {}
+        self.saves_u = {}
 
         self.t0 = None
+        self.time = 0
+
+        self.controls = {}
 
     def add(self, obj):
         if type(obj) == Satellite:
             obj.linkto(simulator=self)
             self.satellites.append(obj)
             self.saves[obj.name] = [obj.x]
+            self.saves_u[obj.name] = [obj.ux, obj.uy, obj.uz]
         elif type(obj) == Planet:
             obj.linkto(simulator=self)
             self.planets.append(obj)
@@ -47,42 +52,48 @@ class Simulator:
             count += sat.alive
         return count
 
-    def run(self, time_max=60, iteration_max=10**8, infos=0):
+    def run(self, duration_max=60, time_max=10**6, infos=0):
         print(f" > Start simulation ...")
         self.running = True
         self.t0 = time()
+        if infos < 1:
+            infos = round(infos * time_max)
+        next_info = 0
         while self.running:
             self.step(infos)
-            if infos and self.iteration % infos == 0:
+            if infos and self.time >= next_info:
+                next_info += infos
                 for sat in self.satellites:
                     if not sat.planet_ref is None:
-                        print(f" - Altitude de {sat.name} selon {sat.planet_ref.name} : {round(sat.get_altitude())} m")
-                        print(f"   Speed : {round(np.linalg.norm(sat.v))} m/s")
+                        print(f"\n - Altitude de {sat.name} selon {sat.planet_ref.name} : {round(sat.get_altitude())} m")
+                        print(f"   Speed : {round(np.linalg.norm(sat.v))} m/s" + ' '*30 + f"({self.time} sec)")
 
             self.iteration += 1
-            if time()-self.t0 >= time_max or self.iteration >= iteration_max or self.count_alive() == 0:
+            if time()-self.t0 >= duration_max or self.time >= time_max or self.count_alive() == 0:
                 self.stop()
                 return False
         return True
 
     def step(self, infos=False):
         for sat in self.satellites:
-            sat.step(planets=self.planets)
+            sat.step(planets=self.planets, infos=infos)
             self.saves[sat.name].append(sat.x)
+            self.saves_u[sat.name].append([sat.ux, sat.uy, sat.uz])
+        self.time += self.dt
 
-            # Controls for next step :
-            if not sat.controls is None:
-                for controler in sat.controls.keys():
-                    for step in sat.controls[controler]:  # step = (iteration, value)
-                        iteration, value = step[0], step[1]
-                        if self.iteration == iteration:
-                            if infos:
-                                print(f"   | set {controler} to {value}")
-                            if '-' in controler:
-                                if controler[:8] == 'thruster':
-                                    sat.get(controler[9:]).on(power=value)
-                            else:
-                                setattr(sat, controler, value)
+        # Manuals Controls for next step :
+        for ctrl in self.controls.keys():
+            for step in self.controls[ctrl]:  # step = (time, value)
+                time, value = step[0], step[1]
+                if self.time >= time:
+                    if infos:
+                        print(f"   | set {ctrl} to {value}" + ' '*3 + f"({self.time} sec)")
+                        setattr(sat, ctrl, value)
+                    self.controls[ctrl].remove(step)
+        # Automatic controls for next step :
+        for sat in self.satellites:
+            if not sat.controler is None:
+                sat.controler.update()
 
     def stop(self):
         self.running = False
@@ -91,7 +102,7 @@ class Simulator:
         for key in self.saves.keys():
             self.saves[key] = np.array(self.saves[key])
 
-    def plot(self, trajectory=False):
+    def plot(self, trajectory=True):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         for pln in self.planets:
@@ -106,28 +117,10 @@ class Simulator:
         ax.set_zlabel('Z')
         plt.show()
 
-    def trajectory(self):
-        self.plot(trajectory=True)
-
-    def run_live_simulation(self, time_max=60, iteration_max=10**8, infos=0, trajectory=False):
+    def animation(self, trajectory=True, step=1):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
-
-        print(f" > Start simulation ...")
-        self.running = True
-        self.t0 = time()
-        while self.running:
-            self.step(infos=infos)
-            if infos and self.iteration % infos == 0:
-                for sat in self.satellites:
-                    if not sat.planet_ref is None:
-                        print(f" - Altitude de {sat.name} selon {sat.planet_ref.name} : {round(sat.get_altitude())} m")
-                        print(f"   Speed : {round(np.linalg.norm(sat.v))} m/s")
-
-            self.iteration += 1
-            if time() - self.t0 >= time_max or self.iteration >= iteration_max or self.count_alive() == 0:
-                self.stop()
-
+        for i in range(0, self.iteration, step):
             plt.cla()
             ax.axis('equal')
             ax.set_xlabel('X')
@@ -136,10 +129,13 @@ class Simulator:
             for pln in self.planets:
                 fig, ax = pln.plot(fig=fig, ax=ax, display=False)
             for sat in self.satellites:
+                sat.x = self.saves[sat.name][i]
+                sat.ux, sat.uy, sat.uz = self.saves_u[sat.name][i]
                 fig, ax = sat.plot(fig=fig, ax=ax, display=False)
                 if trajectory:
-                    saves_arr = np.array(self.saves[sat.name])
-                    ax.plot(saves_arr[:, 0], saves_arr[:, 1], saves_arr[:, 2], '-' + sat.color)
+                    traj = self.saves[sat.name][:i]
+                    ax.plot(traj[:, 0], traj[:, 1], traj[:, 2], '-' + sat.color)
             plt.pause(0.01)
         plt.show()
+
 

@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from object import Object
 from thruster import Thruster
+from controlers import Controler
 from tools import rotation_matrix, zero, from_other_base
 
 
@@ -26,7 +27,8 @@ class Satellite(Object):
         self.a_ang, self.v_ang, self.x_ang = zero(), zero(), zero()
 
         # Controlers :
-        self.controls = None
+        self.controls = {}          # Manuals controls
+        self.controler = None       # Automatic controler
 
     def set_scale(self, scale):
         self.scale = scale
@@ -38,6 +40,8 @@ class Satellite(Object):
     def add(self, obj):
         if type(obj) == Thruster:
             self.thrusters.append(obj)
+        elif type(obj) == Controler:
+            self.controler = obj
         else:
             print(f" > Impossible d'ajouter ce type d'objet à la simulation")
 
@@ -71,7 +75,7 @@ class Satellite(Object):
 
         return self.thrust, self.torque
 
-    def step(self, planets):
+    def step(self, planets, infos=0):
         if self.alive and (not self.islanded or self.istakingoff):
             F, C = self.get_thrust()
             # Force :
@@ -83,6 +87,26 @@ class Satellite(Object):
             self.get_axes(dalpha=self.x_ang)
             if not (self.islanded or self.istakingoff):
                 self.check_for_collision(planets=planets)
+        self.update_controls(infos=infos)
+
+    def update_controls(self, infos=0):
+        for controler in self.controls.keys():
+            for step in self.controls[controler]:  # step = (time, value)
+                time, value = step[0], step[1]
+                if self.simulator.time >= time:
+                    if infos:
+                        print(f"   | set {controler} to {value}" + ' '*3 + f"({self.simulator.time} sec)")
+                    if '-' in controler:
+                        if controler[:8] == 'thruster':
+                            self.get(controler[9:]).on(power=value)
+                        if controler[:3] == 'ctr':
+                            if controler[4:7] == 'run':
+                                getattr(self.controler, controler[8:])(value)   # Run function with args
+                            else:
+                                setattr(self.controler, controler[4:], value)
+                    else:
+                        setattr(self, controler, value)
+                    self.controls[controler].remove(step)
 
     def plot(self, fig=None, ax=None, display=True):
         if fig is None or ax is None:

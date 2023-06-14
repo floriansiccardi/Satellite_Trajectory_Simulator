@@ -1,6 +1,7 @@
 import numpy as np
 from random import randint
 from time import time
+from tools import normalize
 
 
 class Object:
@@ -29,7 +30,7 @@ class Object:
         for pln in planets:
             if pln != self:
                 d = self.x - pln.x          # Vecteur direction
-                u = -d / np.linalg.norm(d)  # Vecteur direction normalisé (sens opposé)
+                u = -normalize(d)  # Vecteur direction normalisé (sens opposé)
                 a = a + u * 6.67*10**-11 * pln.mass / (np.linalg.norm(d) ** 2)    # a = F / m
         return a
     
