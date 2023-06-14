@@ -13,6 +13,10 @@ def RK4(f, df, dt):
     return f, df
 
 
+def normalize(vec):
+    return vec / np.linalg.norm(vec)
+
+
 def rotation_matrix(angle, axe='z'):
     if axe in [2, 'z']:
         return np.array([[np.cos(angle), -np.sin(angle), 0], [np.sin(angle), np.cos(angle), 0], [0, 0, 1]])

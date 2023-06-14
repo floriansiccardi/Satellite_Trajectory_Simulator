@@ -18,17 +18,19 @@ class Simulator:
         self.satellites = []
         self.planets = []
         self.saves = {}
+        self.saves_u = {}
 
         self.t0 = None
         self.time = 0
 
-        self.controls = None
+        self.controls = {}
 
     def add(self, obj):
         if type(obj) == Satellite:
             obj.linkto(simulator=self)
             self.satellites.append(obj)
             self.saves[obj.name] = [obj.x]
+            self.saves_u[obj.name] = [obj.ux, obj.uy, obj.uz]
         elif type(obj) == Planet:
             obj.linkto(simulator=self)
             self.planets.append(obj)
@@ -63,7 +65,7 @@ class Simulator:
                 next_info += infos
                 for sat in self.satellites:
                     if not sat.planet_ref is None:
-                        print(f" - Altitude de {sat.name} selon {sat.planet_ref.name} : {round(sat.get_altitude())} m")
+                        print(f"\n - Altitude de {sat.name} selon {sat.planet_ref.name} : {round(sat.get_altitude())} m")
                         print(f"   Speed : {round(np.linalg.norm(sat.v))} m/s" + ' '*30 + f"({self.time} sec)")
 
             self.iteration += 1
@@ -76,18 +78,22 @@ class Simulator:
         for sat in self.satellites:
             sat.step(planets=self.planets, infos=infos)
             self.saves[sat.name].append(sat.x)
+            self.saves_u[sat.name].append([sat.ux, sat.uy, sat.uz])
         self.time += self.dt
 
-        # Controls for next step :
-        if not self.controls is None:
-            for controler in self.controls.keys():
-                for step in self.controls[controler]:  # step = (time, value)
-                    time, value = step[0], step[1]
-                    if self.time >= time:
-                        if infos:
-                            print(f"   | set {controler} to {value}")
-                        setattr(sat, controler, value)
-                        self.controls[controler].remove(step)
+        # Manuals Controls for next step :
+        for ctrl in self.controls.keys():
+            for step in self.controls[ctrl]:  # step = (time, value)
+                time, value = step[0], step[1]
+                if self.time >= time:
+                    if infos:
+                        print(f"   | set {ctrl} to {value}" + ' '*3 + f"({self.time} sec)")
+                        setattr(sat, ctrl, value)
+                    self.controls[ctrl].remove(step)
+        # Automatic controls for next step :
+        for sat in self.satellites:
+            if not sat.controler is None:
+                sat.controler.update()
 
     def stop(self):
         self.running = False
@@ -124,6 +130,7 @@ class Simulator:
                 fig, ax = pln.plot(fig=fig, ax=ax, display=False)
             for sat in self.satellites:
                 sat.x = self.saves[sat.name][i]
+                sat.ux, sat.uy, sat.uz = self.saves_u[sat.name][i]
                 fig, ax = sat.plot(fig=fig, ax=ax, display=False)
                 if trajectory:
                     traj = self.saves[sat.name][:i]

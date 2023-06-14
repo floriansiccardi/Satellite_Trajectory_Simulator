@@ -27,7 +27,7 @@ class Satellite(Object):
         self.a_ang, self.v_ang, self.x_ang = zero(), zero(), zero()
 
         # Controlers :
-        self.controls = None        # Manuals controls
+        self.controls = {}          # Manuals controls
         self.controler = None       # Automatic controler
 
     def set_scale(self, scale):
@@ -87,8 +87,7 @@ class Satellite(Object):
             self.get_axes(dalpha=self.x_ang)
             if not (self.islanded or self.istakingoff):
                 self.check_for_collision(planets=planets)
-        if not self.controls is None:
-            self.update_controls(infos=infos)
+        self.update_controls(infos=infos)
 
     def update_controls(self, infos=0):
         for controler in self.controls.keys():
@@ -96,10 +95,15 @@ class Satellite(Object):
                 time, value = step[0], step[1]
                 if self.simulator.time >= time:
                     if infos:
-                        print(f"   | set {controler} to {value}")
+                        print(f"   | set {controler} to {value}" + ' '*3 + f"({self.simulator.time} sec)")
                     if '-' in controler:
                         if controler[:8] == 'thruster':
                             self.get(controler[9:]).on(power=value)
+                        if controler[:3] == 'ctr':
+                            if controler[4:7] == 'run':
+                                getattr(self.controler, controler[8:])(value)   # Run function with args
+                            else:
+                                setattr(self.controler, controler[4:], value)
                     else:
                         setattr(self, controler, value)
                     self.controls[controler].remove(step)
