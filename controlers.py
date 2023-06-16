@@ -78,22 +78,31 @@ class Controler:
     def power_for_join_GEO(self):
         Fg = self.sat.a
 
-    def get_angle_with_ground(self, args={}):
-        uv = normalize(self.sat.v)
-        ur = normalize(self.sat.x - self.sat.planet_ref.x)
-        return np.arccos(np.dot(uv, ur))
-
     def get_angle_from_ground(self):
         return np.arccos(self.sat.ux[0])
 
     def update(self, infos=True):
-        if self.reach_geo:
-            Fg, theta = np.linalg.norm(self.sat.ag) * self.sat.mass, self.get_angle_from_ground()
-            v, r = self.sat.get_speed(), self.sat.get_radius()
-            denom = np.cos(theta) * self.sat.get('main').thrust_max
-            if denom != 0:
-                self.sat.get('main').on((Fg - self.sat.mass * v**2 / r * np.sin(theta)) / denom)
-                print(f" | set main power on {self.sat.get('main').power}")
+        if not self.reach_geo is None:
+            gamma = 10**-6        # power per meter
+            ur, r = normalize(self.sat.x - self.sat.planet_ref.x), self.sat.get_radius()
+            theta = np.arccos(np.dot(self.sat.ux, ur))
+            power_stat = np.linalg.norm(self.sat.ag) * self.sat.mass / (self.sat.get('main').thrust_max * np.cos(theta))
+            power_dyna = gamma * (self.reach_geo - r)
+            self.sat.get('main').on(power=power_stat+power_dyna)
+
+            # CHEAT :
+            if r >= self.reach_geo:
+                prev_r, prev_v = r, self.sat.get_speed()
+                self.sat.x = self.reach_geo * ur
+                self.sat.v = self.geo_speed(radius=self.reach_geo) * np.cross(-ur, np.array([0, 0, 1]))
+                self.sat.get('main').off()
+                self.reach_geo = None
+
+                delta_r = abs(round(100 * (prev_r - self.sat.get_radius()) / prev_r, 2))
+                delta_v = abs(round(100 * (prev_v - self.sat.get_speed()) / prev_v, 2))
+                print(f"   | GEO orbit forced ({delta_r}% for position, {delta_v}% for speed)")
+                print(f"     GEO orbit reached at {self.sat.simulator.time} sec")
+
 
 
 
