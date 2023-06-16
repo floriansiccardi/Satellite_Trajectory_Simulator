@@ -75,11 +75,18 @@ class Satellite(Object):
 
         return self.thrust, self.torque
 
+    def get_radius(self):
+        if not self.planet_ref is None:
+            return np.linalg.norm(self.x - self.planet_ref.x)
+
+    def get_speed(self):
+        return np.linalg.norm(self.v)
+
     def step(self, planets, infos=0):
         if self.alive and (not self.islanded or self.istakingoff):
             F, C = self.get_thrust()
             # Force :
-            self.a = self.get_a(planets=planets) + F / self.mass
+            self.a = self.get_ag(planets=planets) + F / self.mass
             self.x, self.v, self.a = self.simulator.integrate(f=self.x, df=self.v, ddf=self.a)
             # Couple :
             self.a_ang = C / self.inertia
@@ -108,7 +115,7 @@ class Satellite(Object):
                         setattr(self, controler, value)
                     self.controls[controler].remove(step)
 
-    def plot(self, fig=None, ax=None, display=True):
+    def plot(self, fig=None, ax=None, display=True, direction=True):
         if fig is None or ax is None:
             fig = plt.figure()
             ax = fig.add_subplot(111, projection='3d')
@@ -129,6 +136,11 @@ class Satellite(Object):
             x, y, z = vertices[face, 0], vertices[face, 1], vertices[face, 2]
             x[2::], y[2::], z[2::] = x[:1:-1], y[:1:-1], z[:1:-1]
             ax.plot_surface(x.reshape((2, 2)), y.reshape((2, 2)), z.reshape((2, 2)), facecolors=self.color)
+
+        # Vecteur direction
+        if direction:
+            dir = np.array([self.x, self.x - self.ux * self.size[0]])
+            ax.plot(dir[:, 0], dir[:, 1], dir[:, 2], '-k')
 
         if display:
             ax.axis('equal')

@@ -35,3 +35,6 @@ def from_other_base(point, base, base_center=(0, 0, 0)):
 
 def zero(size=3):
     return np.array([0] * size)
+
+def sign(inp):
+    return int(inp / np.abs(inp))

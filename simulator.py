@@ -9,7 +9,7 @@ from datetime import timedelta
 
 class Simulator:
 
-    def __init__(self, dt=20):
+    def __init__(self, dt=10):
         self.dt = dt
         self.running = False
         self.iteration = 0
@@ -102,7 +102,7 @@ class Simulator:
         for key in self.saves.keys():
             self.saves[key] = np.array(self.saves[key])
 
-    def plot(self, trajectory=True):
+    def plot(self, trajectory=True, radius=[]):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         for pln in self.planets:
@@ -115,6 +115,10 @@ class Simulator:
         ax.set_xlabel('X')
         ax.set_ylabel('Y')
         ax.set_zlabel('Z')
+        if len(radius) > 0:
+            theta = np.linspace(0, 2*np.pi, 100)
+            for r in radius:
+                ax.plot(r * np.cos(theta), r * np.sin(theta), ':k')
         plt.show()
 
     def animation(self, trajectory=True, step=1):
@@ -137,5 +141,4 @@ class Simulator:
                     ax.plot(traj[:, 0], traj[:, 1], traj[:, 2], '-' + sat.color)
             plt.pause(0.01)
         plt.show()
-
 
