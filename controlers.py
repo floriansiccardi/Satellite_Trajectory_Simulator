@@ -1,5 +1,6 @@
 import numpy as np
 from tools import normalize, sign
+from math import ceil
 
 
 class Controler:
@@ -11,6 +12,7 @@ class Controler:
         self.sat = sat
 
         self.reach_geo = None
+        self.reach_sync = None
 
     def geo_speed(self, radius):
         """
@@ -32,6 +34,24 @@ class Controler:
         """
         v = np.array([1 / r1, 1 / r2])
         return np.sqrt(np.dot(2 * self.G * self.mass, v - 1 / (r1 + r2)))
+
+    def power_for_synchronize_rotation(self, axe=2):
+        power = - self.sat.v_ang[axe] * self.sat.inertia[axe] / self.sat.simulator.dt
+        if power == 0:
+            return 0, 0
+        for thruster in self.sat.thrusters:
+            T = thruster.torque_max[axe]
+            if T != 0:
+                if sign(power) == sign(T):
+                    power /= thruster.torque_max[axe]
+                    n = ceil(power)
+                    return {'power': power, 'n': n, 'thruster': thruster.name}
+
+    def synchronize(self, args={}):
+        self.reach_sync = self.power_for_synchronize_rotation(axe=2)
+        self.reach_sync['step'], self.reach_sync['iteration'] = 'stop', 0
+        self.sat.get(self.reach_sync['thruster']).on(power=self.reach_sync['power'])
+        print(f"   | ctr: start to stop rotation")
 
     def power_for_speed(self, speed, dt, niteration=1, direction=(1, 0, 0)):
         """
@@ -73,7 +93,7 @@ class Controler:
                 if thruster.torque_max[axe] != 0:
                     power = 2*np.pi * self.sat.inertia[axe] / (n * dt * period * thruster.torque_max[axe])
                     if 0 <= power <= 1.:            # Power de 0% à 100% (min et max)
-                        return {'power': power, 'niteration': n, 'thruster_name': thruster.name}
+                        return {'power': power, 'n': n, 'thruster': thruster.name}
 
     def power_for_join_GEO(self):
         Fg = self.sat.a
@@ -102,6 +122,27 @@ class Controler:
                 delta_v = abs(round(100 * (prev_v - self.sat.get_speed()) / prev_v, 2))
                 print(f"   | GEO orbit forced ({delta_r}% for position, {delta_v}% for speed)")
                 print(f"     GEO orbit reached at {self.sat.simulator.time} sec")
+        if not self.reach_sync is None:
+            if self.reach_sync['step'] == 'stop':
+                if self.reach_sync['iteration'] == self.reach_sync['n']:
+                    self.sat.get(self.reach_sync['thruster']).off()
+                    self.reach_sync = {'step': 'wait', 'epsilon': 0.01, 'period': self.get_period()}
+                    print(f"   | ctr: wait to synchronize rotation")
+                else:
+                    self.reach_sync['iteration'] += 1
+            if self.reach_sync['step'] == 'wait':
+                angle = np.arccos(np.dot(normalize(self.sat.x - self.sat.planet_ref.x)[0], self.sat.ux[0]))
+                if np.pi/2 * (1-self.reach_sync['epsilon']) < angle < np.pi/2 * (1+self.reach_sync['epsilon']):
+                    self.reach_sync = self.power_for_rotation(period=self.reach_sync['period'], dt=self.sat.simulator.dt)
+                    self.reach_sync['step'], self.reach_sync['iteration'] = 'sync', 0
+                    self.sat.get(self.reach_sync['thruster']).on(power=self.reach_sync['power'])
+            if self.reach_sync['step'] == 'sync':
+                if self.reach_sync['iteration'] == self.reach_sync['n']:
+                    self.sat.get(self.reach_sync['thruster']).off()
+                    print(f"   | ctr: finish to synchronize rotation")
+                    self.reach_sync = None
+                else:
+                    self.reach_sync['iteration'] += 1
 
 
 
