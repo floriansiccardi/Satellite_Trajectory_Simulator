@@ -1,5 +1,5 @@
 import numpy as np
-from tools import normalize
+from tools import normalize, sign
 
 
 class Controler:
@@ -10,15 +10,7 @@ class Controler:
         self.radius = 6.371 * 10 ** 6
         self.sat = sat
 
-        # Reach next GEO orbit
-        self.reach_geo = False
-        self.reach_geo_steps = {}
-        self.reach_geo_iteration = 0
-
-        # Synchronize GEO
-        self.set_geosync = False
-        self.set_geosync_steps = {}
-        self.set_geosync_iteration = 0
+        self.reach_geo = None
 
     def geo_speed(self, radius):
         """
@@ -27,6 +19,9 @@ class Controler:
         :return: (float) vitesse tangentielle (en m/s)
         """
         return np.sqrt(self.G * self.mass / radius)
+
+    def get_period(self):
+        return 2*np.pi * np.linalg.norm(self.sat.x - self.sat.planet_ref.x) / np.linalg.norm(self.sat.v)
 
     def geo_transfert(self, r1, r2):
         """
@@ -80,44 +75,29 @@ class Controler:
                     if 0 <= power <= 1.:            # Power de 0% à 100% (min et max)
                         return {'power': power, 'niteration': n, 'thruster_name': thruster.name}
 
+    def power_for_join_GEO(self):
+        Fg = self.sat.a
+
     def get_angle_with_ground(self, args={}):
         uv = normalize(self.sat.v)
         ur = normalize(self.sat.x - self.sat.planet_ref.x)
         return np.arccos(np.dot(uv, ur))
 
+    def get_angle_from_ground(self):
+        return np.arccos(self.sat.ux[0])
+
     def update(self, infos=True):
         if self.reach_geo:
-            threshold = 0.01
-            angle = self.get_angle_with_ground()
-            if self.reach_geo_steps:
-                if self.reach_geo_iteration == self.reach_geo_steps['niteration']:
-                    self.sat.get(self.reach_geo_steps['thruster']).off()
-                    self.reach_geo, self.reach_geo_steps, self.reach_geo_iteration = False, {}, 0
-                else:
-                    self.reach_geo_iteration += 1
-            elif np.pi / 2 * (1 - threshold) < angle < np.pi / 2 * (1 + threshold):
-                    radius = np.linalg.norm(self.sat.x - self.sat.planet_ref.x)
-                    delta_speed = self.geo_speed(radius=radius) - np.linalg.norm(self.sat.v)
-                    self.reach_geo_steps = self.power_for_speed(speed=delta_speed, dt=self.sat.simulator.dt,
-                                                                     direction=normalize(self.sat.v))
-                    if self.reach_geo_steps:
-                        self.sat.get(self.reach_geo_steps['thruster']).on(self.reach_geo_steps['power'])
-                        if infos:
-                            print(f" > Start to reach GEO, {self.reach_geo_steps['niteration']} iteration needed" + ' '*3 + f"({self.sat.simulator.time} sec)")
-        if self.set_geosync:
-            threshold = 0.02
-            angle = self.get_angle_with_ground()
-            if np.pi/2*(1-threshold) < angle < np.pi/2*(1+threshold):
-                if self.set_geosync_steps:
-                    if self.set_geosync_iteration < self.set_geosync_steps['niteration']:
-                        self.sat.get(self.set_geosync_steps['thruster']).off()
-                        self.set_geosync_steps, self.set_geosync_iteration = {}, 0
-                else:
-                    radius = np.linalg.norm(self.sat.x - self.sat.planet_ref.x)
-                    delta_speed = self.geo_speed(radius=radius) - np.linalg.norm(self.sat.v)
-                    self.set_geosync_steps = self.power_for_rotation(speed=delta_speed, dt=self.sat.simulator.dt,
-                                                                     direction=normalize(self.sat.v))
-                    if self.set_geosync_steps:
-                        self.sat.get(self.set_geosync_steps['thruster']).on(self.set_geosync_steps['power'])
-                        if infos:
-                            print(f" > Start synchronize rotation, {self.set_geosync_steps['niteration']} iteration needed")
+            Fg, theta = np.linalg.norm(self.sat.ag) * self.sat.mass, self.get_angle_from_ground()
+            v, r = self.sat.get_speed(), self.sat.get_radius()
+            denom = np.cos(theta) * self.sat.get('main').thrust_max
+            if denom != 0:
+                self.sat.get('main').on((Fg - self.sat.mass * v**2 / r * np.sin(theta)) / denom)
+                print(f" | set main power on {self.sat.get('main').power}")
+
+
+
+
+
+
+

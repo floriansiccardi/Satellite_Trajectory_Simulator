@@ -25,7 +25,7 @@ class Thruster:
         self.name = name
 
     def on(self, power=1.): # Par défaut à 100%
-        self.power = power
+        self.power = max(min(power, 1), 0)
         self.thrust = np.dot(self.power * self.thrust_max, self.direction)
         self.torque = np.dot(self.power, self.torque_max)
 

@@ -1,7 +1,7 @@
 import numpy as np
 from random import randint
 from time import time
-from tools import normalize
+from tools import normalize, zero
 
 
 class Object:
@@ -12,7 +12,7 @@ class Object:
         self.scale = 1
 
         # Position, Vitesse et Accélération :
-        self.x, self.v, self.a = np.array(x), np.array(v), np.array(a)
+        self.x, self.v, self.ag = np.array(x), np.array(v), np.array(a)
         self.alive = True
 
         # Identification :
@@ -25,14 +25,14 @@ class Object:
     def linkto(self, simulator):
         self.simulator = simulator
 
-    def get_a(self, planets):
-        a = np.array([0, 0, 0])
+    def get_ag(self, planets):
+        self.ag = zero()
         for pln in planets:
             if pln != self:
                 d = self.x - pln.x          # Vecteur direction
                 u = -normalize(d)  # Vecteur direction normalisé (sens opposé)
-                a = a + u * 6.67*10**-11 * pln.mass / (np.linalg.norm(d) ** 2)    # a = F / m
-        return a
+                self.ag = self.ag + u * 6.67*10**-11 * pln.mass / (np.linalg.norm(d) ** 2)    # a = F / m
+        return self.ag
     
     def check_for_collision(self, planets):
         for pln in planets:

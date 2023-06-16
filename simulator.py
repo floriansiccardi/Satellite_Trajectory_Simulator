@@ -9,7 +9,7 @@ from datetime import timedelta
 
 class Simulator:
 
-    def __init__(self, dt=20):
+    def __init__(self, dt=10):
         self.dt = dt
         self.running = False
         self.iteration = 0
