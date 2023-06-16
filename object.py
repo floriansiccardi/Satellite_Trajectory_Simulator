@@ -7,6 +7,15 @@ from tools import normalize, zero
 class Object:
 
     def __init__(self, mass, name='unnamed', x=(0, 0, 0), v=(0, 0, 0), a=(0, 0, 0)):
+        """
+        Initialise un objet de la classe object.
+
+        :param mass: (float) Masse de l'objet.
+        :param name: (str, optional) Nom de l'objet (par défaut 'unnamed').
+        :param x: (tuple, optional) Coordonnées spatiales de l'objet (par défaut (0, 0, 0)).
+        :param v: (tuple, optional) Vitesse de l'objet (par défaut (0, 0, 0)).
+        :param a: (tuple, optional) Accélération de l'objet (par défaut (0, 0, 0)).
+        """
         self.mass = mass
         self.simulator = None
         self.scale = 1
