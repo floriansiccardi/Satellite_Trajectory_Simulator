@@ -138,7 +138,7 @@ class Controler:
                 # Mise à jour de la position et de la vitesse pour atteindre l'orbite GEO
                 self.sat.x = self.reach_geo * ur
                 self.sat.v = self.geo_speed(radius=self.reach_geo) * np.cross(-ur, np.array([0, 0, 1]))
-                
+
                 self.sat.get('main').off()
                 self.reach_geo = None
 
