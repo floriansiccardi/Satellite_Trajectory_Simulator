@@ -254,5 +254,5 @@ class Satellite(Object):
             ax.set_ylabel('Y')
             ax.set_zlabel('Z')
             plt.show()
-            
+
         return fig, ax
