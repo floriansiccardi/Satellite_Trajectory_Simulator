@@ -159,7 +159,7 @@ class Simulator:
         # Arrêt de la simulation
         self.running = False
         # Affiche les informations de fin
-         print(f"\n" + '-'*70 + "\n")
+        print(f"\n" + '-'*70 + "\n")
         print(f"   Fin de simuation après {self.iteration} itérations et {round(time() - self.t0, 2)} sec")
         print(f"   Durée simulée : {timedelta(seconds=self.iteration * self.dt)}\n\n" + '-'*70 + "\n")
         for key in self.saves.keys():
@@ -175,24 +175,23 @@ class Simulator:
         """
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
-        # Trace les planètes
         for pln in self.planets:
             fig, ax = pln.plot(fig=fig, ax=ax, display=False)
-        # Trace les satellites
         for sat in self.satellites:
             fig, ax = sat.plot(fig=fig, ax=ax, display=False)
             if trajectory:
-                # Trace les trajectoires des satellites
-                ax.plot(self.saves[sat.name][:, 0], self.saves[sat.name][:, 1], self.saves[sat.name][:, 2],  '-' + sat.color)
+                ax.plot(self.saves[sat.name][:, 0], self.saves[sat.name][:, 1], self.saves[sat.name][:, 2],
+                        '-' + sat.color)
+        if add:
+            for type in add.keys():
+                if type == 'circle':
+                    theta = np.linspace(0, 2 * np.pi, 100)
+                    for r in add[type]:
+                        ax.plot(r * np.cos(theta), r * np.sin(theta), ':k')
         ax.axis('equal')
         ax.set_xlabel('X')
         ax.set_ylabel('Y')
         ax.set_zlabel('Z')
-        if add:
-            for type in add.keys():
-                if type == 'circle':
-                    r, theta = add[type], np.linspace(0, 2*np.pi, 100)
-                    ax.plot(r * np.cos(theta), r * np.sin(theta), ':k')
         plt.show()
 
     def animation(self, trajectory=True, step=1):
