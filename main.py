@@ -6,7 +6,7 @@ from controlers import Controler
 import numpy as np
 
 simu = Simulator()
-simu.controls = {'dt': [(1150, 5), (3000, 50)]}
+simu.controls = {'dt': [(1150, 5), (2750, 20)]}
 
 # --- Terre :
 simu.add(Planet(name='Terre', radius=6371*10**3, mass=5.972*10**24))
@@ -27,16 +27,16 @@ mySat.set_scale(scale=200000)
 # Contrôles manuels pour lancer sur une orbite temporaire
 mySat.controls = {'thruster-main': [(60, 0.79)],
                   'thruster-left': [(1200, 0.014), (1205, 0.), (1400, 0.022), (1405, 0.)],
-                  'thruster-right': [],
+                  'thruster-right': [(2700, 0.009), (2720, 0.)],
                   'islanded': [(60, False)], 'istakingoff': [(60, True), (120, False)],
-                  'ctr-reach_geo': [(1200, 8*10**6)]}
+                  'ctr-reach_geo': [(1200, 8*10**6)],
+                  'ctr-run-synchronize': [(2800, {})]}
 # Pilote automatique pour les changement d'orbites
 mySat.add(Controler(sat=mySat))
 
 simu.add(mySat)
 
-simu.run(duration_max=10, time_max=10000, infos=1/6)
-simu.plot(radius=[8*10**6])
+simu.run(duration_max=10, time_max=4000, infos=1/20)
+simu.plot(add={'circle': 8*10**6})
 #simu.animation(step=3)
 
-print(simu.get('mySat').get('main').power)

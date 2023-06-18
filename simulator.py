@@ -97,7 +97,8 @@ class Simulator:
         :param infos: (int, optional) Fréquence d'affichage des informations pendant la simulation.
         :return: (bool) True si la simulation s'est terminée normalement, False sinon.
         """
-        print(f" > Start simulation ...")
+        print(f"\n > Start simulation ...")
+
         self.running = True
         self.t0 = time()
         # Calcul de la fréquence d'affichage des informations
@@ -112,8 +113,7 @@ class Simulator:
                 next_info += infos
                 for sat in self.satellites:
                     if not sat.planet_ref is None:
-                        print(f"\n - Altitude de {sat.name} selon {sat.planet_ref.name} : {round(sat.get_altitude())} m")
-                        print(f"   Speed : {round(np.linalg.norm(sat.v))} m/s" + ' '*30 + f"({self.time} sec)")
+                        print(f"\n - [{sat.name} - {self.time} sec] Altitude : {round(sat.get_altitude())} m, Vitesse : {round(np.linalg.norm(sat.v))} m/s")
 
             self.iteration += 1
 
@@ -159,18 +159,19 @@ class Simulator:
         # Arrêt de la simulation
         self.running = False
         # Affiche les informations de fin
-        print(f"   Simulation ended after {self.iteration} iterations and {round(time() - self.t0, 2)} sec")
-        print(f"   Real elapsed time : {timedelta(seconds=self.iteration * self.dt)}")
+         print(f"\n" + '-'*70 + "\n")
+        print(f"   Fin de simuation après {self.iteration} itérations et {round(time() - self.t0, 2)} sec")
+        print(f"   Durée simulée : {timedelta(seconds=self.iteration * self.dt)}\n\n" + '-'*70 + "\n")
         for key in self.saves.keys():
             self.saves[key] = np.array(self.saves[key])
 
-    def plot(self, trajectory=True, radius=[]):
+    def plot(self, trajectory=True, add={}):
         """
         Trace le graphique de la simulation en affichant les planètes, satellites et trajectoires des satellites.
 
         :param trajectory: (bool, optional) Si True, affiche les trajectoires des satellites.
                                             Si False, n'affiche pas les trajectoires des satellites.
-        :param radius: (list, optional) Liste des rayons à afficher en tant que cercles.
+        :param add: (dict, optional) Liste des cercles à afficher.
         """
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
@@ -187,10 +188,11 @@ class Simulator:
         ax.set_xlabel('X')
         ax.set_ylabel('Y')
         ax.set_zlabel('Z')
-        if len(radius) > 0:
-            theta = np.linspace(0, 2*np.pi, 100)
-            for r in radius:
-                ax.plot(r * np.cos(theta), r * np.sin(theta), ':k')
+        if add:
+            for type in add.keys():
+                if type == 'circle':
+                    r, theta = add[type], np.linspace(0, 2*np.pi, 100)
+                    ax.plot(r * np.cos(theta), r * np.sin(theta), ':k')
         plt.show()
 
     def animation(self, trajectory=True, step=1):
