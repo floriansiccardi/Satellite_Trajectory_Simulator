@@ -26,7 +26,7 @@ mySat.islanded, mySat.color = True, 'r'
 mySat.set_scale(scale=200000)
 # Contrôles manuels pour lancer sur une orbite temporaire
 mySat.controls = {'thruster-main': [(60, 0.79)],
-                  'thruster-left': [(1200, 0.014), (1205, 0.), (1400, 0.022), (1405, 0.)],
+                  'thruster-left': [(1200, 0.014), (1205, 0.), (1400, 0.023), (1405, 0.)],
                   'thruster-right': [(2700, 0.009), (2720, 0.)],
                   'islanded': [(60, False)], 'istakingoff': [(60, True), (120, False)],
                   'ctr-reach_geo': [(1200, 8*10**6)],
@@ -37,6 +37,6 @@ mySat.add(Controler(sat=mySat))
 
 simu.add(mySat)
 
-simu.run(duration_max=10, time_max=15000, infos=1/10)
+simu.run(duration_max=10, time_max=22000, infos=1/10)
 simu.plot(add={'circle': [8*10**6, 12*10**6]})
 #simu.animation(step=3)
