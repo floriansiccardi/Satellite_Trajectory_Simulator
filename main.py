@@ -3,6 +3,7 @@ from planet import Planet
 from satellite import Satellite
 from thruster import Thruster
 from controlers import Controler
+
 import numpy as np
 
 simu = Simulator()
@@ -38,5 +39,5 @@ mySat.add(Controler(sat=mySat))
 simu.add(mySat)
 
 simu.run(duration_max=10, time_max=15000, infos=1/10)
-simu.plot(add={'circle': [8*10**6, 12*10**6]})
-#simu.animation(step=3)
+# simu.plot(add={'circle': [8*10**6, 12*10**6]})
+simu.animation(step=3)
