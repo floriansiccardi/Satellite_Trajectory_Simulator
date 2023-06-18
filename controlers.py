@@ -13,6 +13,7 @@ class Controler:
 
         self.reach_geo = None
         self.reach_sync = None
+        self.do_homhann = None
 
     def geo_speed(self, radius):
         """
@@ -40,23 +41,8 @@ class Controler:
 
         return periode
 
-    def geo_transfert(self, r1, r2):
-        """
-        Retourne la vitesse
-
-        :param r1: (float) rayon GEO de l'orbit de départ (en m)
-        :param r2: (float) rayon GEO de l'orbit d'arrivée (en m)
-        :return: (1D array, 2 values) vitesse de départ pour se placer en elliptique, vitesse d'arrivée (en m/s)
-        """
-        v = np.array([1 / r1, 1 / r2])
-
-        # Calcul de la différence des vitesses nécessaires pour les orbites elliptiques
-        difference_vitesses = v - 1 / (r1 + r2)
-
-        # Calcul de la vitesse nécessaire en utilisant la formule de la vitesse de libération
-        vitesse_depart = np.sqrt(np.dot(2 * self.G * self.mass, difference_vitesses))
-
-        return vitesse_depart
+    def get_homhann_transfert_time(self, r1, r2):
+        return 1 / 2 * np.sqrt(4 * np.pi ** 2 / self.G / self.sat.planet_ref.mass * ((r1 + r2) / 2) ** 3)
 
     def power_for_synchronize_rotation(self, axe=2):
         power = - self.sat.v_ang[axe] * self.sat.inertia[axe] / self.sat.simulator.dt
@@ -76,7 +62,28 @@ class Controler:
         self.sat.get(self.reach_sync['thruster']).on(power=self.reach_sync['power'])
         print(f"   | ctr: start to stop rotation")
 
-    def power_for_speed(self, speed, dt, niteration=1, direction=(1, 0, 0)):
+    def homhann(self, args={'radius': 0}):
+        r1, r2 = self.sat.get_radius(), args['radius']
+        v = np.sqrt(np.dot(2 * self.G * self.mass, np.array([1 / r1, 1 / r2]) - 1 / (r1 + r2)))
+        self.do_homhann = self.power_for_speed(speed=v[0] - self.sat.get_speed())
+        self.do_homhann['radius'] = r2
+        if self.do_homhann is None:
+            print(f"   ctr: impossible to reach an elliptical orbit")
+        else:
+            self.do_homhann['time'] = self.get_homhann_transfert_time(r1=r1, r2=r2)
+            data = self.power_for_rotation(period=-2 * self.do_homhann['time'])
+            self.do_homhann['stop_at'] = self.do_homhann['time'] + self.sat.simulator.time
+            # power_already_in = Power "déjà comprise dans la alpha_point", donc à ne pas ajouter
+            power_already_in = self.power_for_rotation(period=self.get_period())['power']
+            if data is None:
+                print(f"   ctr: impossible to reach an elliptical orbit")
+            else:
+                self.sat.get(data['thruster']).on(power=-(data['power'] - power_already_in))
+                self.do_homhann['rot'] = data
+                self.sat.get(self.do_homhann['thruster']).on(power=self.do_homhann['power'])
+                self.do_homhann['step'], self.do_homhann['iteration'] = 'reach_elliptic', 0
+
+    def power_for_speed(self, speed, niteration=1, direction=(1, 0, 0)):
         """
         Retourne la puissance (de 0% à 100%) à appliquer au thruster précisé en sortie, durant niteration de dt sec,
         afin d'augmenter sa vitesse de speed dans la direction souhaitée
@@ -90,6 +97,7 @@ class Controler:
                          'niteration': Nombre d'itération nécessaire à la rotation,
                          'thruster_name': Nom du thruster à activer.
         """
+        dt = self.sat.simulator.dt
         for n in range(niteration, 20 * niteration):  # Essaie en n itérations, sinon essaie avec n+1, ...
             for thruster in self.sat.thrusters:  # Essaie tous les thrusters possibles
                 # Calcul de la valeur maximale de poussée du thruster dans la direction souhaitée
@@ -98,9 +106,9 @@ class Controler:
                     # Calcul de la puissance nécessaire pour atteindre la vitesse souhaitée
                     power = self.sat.mass * speed / (n * dt * thrust_max)
                     if 0 <= power <= 1.:  # Vérification de la plage de puissance valide (0% à 100%)
-                        return {'power': power, 'niteration': n, 'thruster': thruster.name}
+                        return {'power': power, 'n': n, 'thruster': thruster.name}
 
-    def power_for_rotation(self, period, dt, niteration=1, axe=2):
+    def power_for_rotation(self, period, niteration=1, axe=2):
         """
         Retourne la puissance (de 0% à 100%) à appliquer au thruster précisé en sortie, durant niteration de dt sec,
         afin de tourner avec la période souhaité autour de l'axe désiré.
@@ -115,6 +123,7 @@ class Controler:
                          'niteration': Nombre d'itération nécessaire à la rotation,
                          'thruster_name': Nom du thruster à activer.
         """
+        dt = self.sat.simulator.dt
         for n in range(niteration, 10 * niteration):  # Essaie en n itérations, sinon essaie avec n+1, ...
             for thruster in self.sat.thrusters:     # Essaie tous les thrusters possibles
                 if thruster.torque_max[axe] != 0:
@@ -122,18 +131,7 @@ class Controler:
                     power = 2*np.pi * self.sat.inertia[axe] / (n * dt * period * thruster.torque_max[axe])
 
                     if 0 <= power <= 1.:            # Vérification de la plage de puissance valide (0% à 100%)
-                        return {'power': power, 'niteration': n, 'thruster_name': thruster.name}
-
-    def power_for_join_GEO(self):
-        Fg = self.sat.a
-
-    def get_angle_from_ground(self):
-        """
-        Calcule l'angle entre la direction de l'axe x du satellite et la direction du sol.
-
-        :return: (float) Angle entre la direction de l'axe x du satellite et la direction du sol (en radians).
-        """
-        return np.arccos(self.sat.ux[0])
+                        return {'power': power, 'n': n, 'thruster': thruster.name}
 
     def update(self, infos=True):
         """
@@ -142,31 +140,23 @@ class Controler:
         :param infos: (bool) Indique si les informations doivent être affichées (par défaut True).
         """
         if not self.reach_geo is None:
-            gamma = 10**-6         # Puissance par mètre
+            gamma = 10 ** -6  # power per meter
             ur, r = normalize(self.sat.x - self.sat.planet_ref.x), self.sat.get_radius()
             theta = np.arccos(np.dot(self.sat.ux, ur))
-
-            # Calcul de la puissance statique
             power_stat = np.linalg.norm(self.sat.ag) * self.sat.mass / (self.sat.get('main').thrust_max * np.cos(theta))
-            # Calcul de la puissance dynamique
             power_dyna = gamma * (self.reach_geo - r)
-            # Activation du thruster principal avec la puissance combinée
-            self.sat.get('main').on(power=power_stat+power_dyna)
+            self.sat.get('main').on(power=power_stat + power_dyna)
 
             # CHEAT :
             if r >= self.reach_geo:
                 prev_r, prev_v = r, self.sat.get_speed()
-                # Mise à jour de la position et de la vitesse pour atteindre l'orbite GEO
                 self.sat.x = self.reach_geo * ur
                 self.sat.v = self.geo_speed(radius=self.reach_geo) * np.cross(-ur, np.array([0, 0, 1]))
-
                 self.sat.get('main').off()
                 self.reach_geo = None
 
-                # Calcul des écarts de position et de vitesse par rapport à l'orbite GEO
                 delta_r = abs(round(100 * (prev_r - self.sat.get_radius()) / prev_r, 2))
                 delta_v = abs(round(100 * (prev_v - self.sat.get_speed()) / prev_v, 2))
-                # Affichage des informations
                 print(f"   | GEO orbit forced ({delta_r}% for position, {delta_v}% for speed)")
                 print(f"     GEO orbit reached at {self.sat.simulator.time} sec")
         if not self.reach_sync is None:
@@ -179,8 +169,8 @@ class Controler:
                     self.reach_sync['iteration'] += 1
             if self.reach_sync['step'] == 'wait':
                 angle = np.arccos(np.dot(normalize(self.sat.x - self.sat.planet_ref.x)[0], self.sat.ux[0]))
-                if np.pi/2 * (1-self.reach_sync['epsilon']) < angle < np.pi/2 * (1+self.reach_sync['epsilon']):
-                    self.reach_sync = self.power_for_rotation(period=self.reach_sync['period'], dt=self.sat.simulator.dt)
+                if np.pi / 2 * (1 - self.reach_sync['epsilon']) < angle < np.pi / 2 * (1 + self.reach_sync['epsilon']):
+                    self.reach_sync = self.power_for_rotation(period=self.reach_sync['period'])
                     self.reach_sync['step'], self.reach_sync['iteration'] = 'sync', 0
                     self.sat.get(self.reach_sync['thruster']).on(power=self.reach_sync['power'])
             if self.reach_sync['step'] == 'sync':
@@ -190,7 +180,29 @@ class Controler:
                     self.reach_sync = None
                 else:
                     self.reach_sync['iteration'] += 1
-
+        if not self.do_homhann is None:
+            if self.do_homhann['step'] == 'reach_elliptic':
+                if self.do_homhann.get('rot'):
+                    if self.do_homhann['rot']['n'] == self.do_homhann['iteration']:
+                        self.sat.get(self.do_homhann['rot']['thruster']).off()
+                if self.do_homhann['n'] == self.do_homhann['iteration']:
+                    self.do_homhann['step'] = 'on_elliptic'
+                    print(f"   | elliptical orbit reached   ({self.sat.simulator.time} sec)")
+                    self.sat.get(self.do_homhann['thruster']).off()
+                else:
+                    self.do_homhann['iteration'] += 1
+            if self.do_homhann['step'] == 'on_elliptic' and self.sat.simulator.time >= self.do_homhann['stop_at']:
+                dv = self.geo_speed(radius=self.do_homhann['radius']) - self.sat.get_speed()
+                self.do_homhann = self.power_for_speed(speed=dv)
+                self.sat.get(self.do_homhann['thruster']).on(power=self.do_homhann['power'])
+                self.do_homhann['step'], self.do_homhann['iteration'] = 'reach_geo', 0
+            if self.do_homhann['step'] == 'reach_geo':
+                if self.do_homhann['iteration'] == self.do_homhann['n']:
+                    self.sat.get(self.do_homhann['thruster']).off()
+                    self.do_homhann = None
+                    print(f"   | successful Homhann transfer")
+                else:
+                    self.do_homhann['iteration'] += 1
 
 
 

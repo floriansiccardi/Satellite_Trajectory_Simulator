@@ -30,13 +30,13 @@ mySat.controls = {'thruster-main': [(60, 0.79)],
                   'thruster-right': [(2700, 0.009), (2720, 0.)],
                   'islanded': [(60, False)], 'istakingoff': [(60, True), (120, False)],
                   'ctr-reach_geo': [(1200, 8*10**6)],
-                  'ctr-run-synchronize': [(2800, {})]}
+                  'ctr-run-synchronize': [(2800, {})],
+                  'ctr-run-homhann': [(7500, {'radius': 12*10**6})]}
 # Pilote automatique pour les changement d'orbites
 mySat.add(Controler(sat=mySat))
 
 simu.add(mySat)
 
-simu.run(duration_max=10, time_max=4000, infos=1/20)
-simu.plot(add={'circle': 8*10**6})
+simu.run(duration_max=10, time_max=15000, infos=1/10)
+simu.plot(add={'circle': [8*10**6, 12*10**6]})
 #simu.animation(step=3)
-
