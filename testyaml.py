@@ -27,6 +27,9 @@ for key, value in parsed_data.items():
     else:
         parser.validate_numeric_value_int_float(key, value)
 
+# Vérification de la condition time < temps_simu
+parser.inferiorite("time", "temps_simu", parsed_data["time"], parsed_data["temps_simu"])
+
 simu = Simulator()
 simu.controls = {'dt': [(1150, 5), (2750, 20)]}
 

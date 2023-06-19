@@ -24,5 +24,9 @@ class LecteurYAML:
         if not isinstance(value, int):
             raise ValueError(f"{key} doit être un nombre entier.")
 
+    def inferiorite(self, key1, key2, val1, val2):
+        if val1 >= val2:
+            raise ValueError(f"La valeur de {key1} doit être inférieure à la valeur de {key2}.")
+
 
 
