@@ -15,3 +15,14 @@ class LecteurYAML:
                 return data
             except yaml.YAMLError as e:
                 print(f"Error reading YAML file: {e}")
+
+    def validate_numeric_value_int_float(self, key, value):
+        if not isinstance(value, (int, float)):
+            raise ValueError(f"{key} doit être un nombre (int ou float).")
+
+    def validate_numeric_value_int(self, key, value):
+        if not isinstance(value, int):
+            raise ValueError(f"{key} doit être un nombre entier.")
+
+
+

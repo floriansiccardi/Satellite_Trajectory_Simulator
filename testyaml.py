@@ -16,6 +16,17 @@ parser = LecteurYAML('donnees.yaml')
 # On exécute la fonction read_yaml() de notre objet LecteurYAML
 parsed_data = parser.read_yaml()
 
+# Validation des champs du fichiers yaml
+for key, value in parsed_data.items():
+    if key == "time" or key == "temps_simu":
+        parser.validate_numeric_value_int(key, value)
+    if key == "satellite":
+        parser.validate_numeric_value_int_float('poids', parsed_data[key]['poids'])
+        for element in parsed_data[key]['taille']:
+            parser.validate_numeric_value_int_float('taille', element)
+    else:
+        parser.validate_numeric_value_int_float(key, value)
+
 simu = Simulator()
 simu.controls = {'dt': [(1150, 5), (2750, 20)]}
 
