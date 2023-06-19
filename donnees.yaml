@@ -1,0 +1,18 @@
+# Données initiales
+rayon_init: 8000000 # rayon de l'orbite géostationnaire initiale en m (valeur conseillée : 8000000)
+time: 10000 # Temps du changement d'orbite en sec
+satellite: # MODIFICATIONS NON CONSEILLÉES
+  poids: 10000 #en kg
+  taille: [3, 1, 1] #(longueur en x, longueur en y, longueur en z) en m
+
+# puissance thuster (en N) MODIFICATIONS NON CONSEILLÉES
+# /!\ à mettre une puissance permettant au satellite de décoller par rapport à son poids
+thuster_principal: 125000
+thuster_brake: 50000
+
+# données finales
+rayon_fin: 9000000 # rayon de l'orbite géostationnaire finale en m
+
+# données de simulation
+temps_simu: 15000 # temps de simulation en sec
+
