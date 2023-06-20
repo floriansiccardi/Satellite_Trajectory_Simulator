@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from planet import Planet
-from satellite import Satellite
+from objects import Planet, Satellite
 import tools
 from time import time
 from datetime import timedelta
