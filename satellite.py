@@ -39,7 +39,8 @@ class Satellite(Object):
 
         # Controlers :
         self.controls = {}          # Manuals controls
-        self.controler = None       # Automatic controler
+        self.controler = Controler()       # Automatic controler
+        self.controler.load(sat=self)
 
     def set_scale(self, scale):
         """

@@ -2,7 +2,6 @@ from simulator import Simulator
 from planet import Planet
 from satellite import Satellite
 from thruster import Thruster
-from controlers import Controler
 import numpy as np
 
 simu = Simulator()
@@ -12,9 +11,9 @@ simu.controls = {'dt': [(1150, 5), (2750, 20)]}
 simu.add(Planet(name='Terre', radius=6371*10**3, mass=5.972*10**24))
 
 # --- ISS (vert) :
-#simu.add(Satellite(name='ISS', mass=450000, size=(108, 75, 45),
-#                   x=(0, simu.get('Terre').radius+408*10**3, 0), v=(-7777.78, 0, 0)))
-#simu.get('ISS').set_scale(scale=5000)
+simu.add(Satellite(name='ISS', mass=450000, size=(108, 75, 45),
+                   x=(0, simu.get('Terre').radius+408*10**3, 0), v=(-7777.78, 0, 0)))
+simu.get('ISS').set_scale(scale=5000)
 
 # --- mySat (rouge) :
 mySat = Satellite(name='mySat', mass=10000, x=(simu.get('Terre').radius, 0, 0),
@@ -32,12 +31,10 @@ mySat.controls = {'thruster-main': [(60, 0.79)],
                   'islanded': [(60, False)], 'istakingoff': [(60, True), (120, False)],
                   'ctr-reach_geo': [(1200, 8*10**6)],
                   'ctr-run-synchronize': [(2800, {})],
-                  'ctr-run-homhann': [(7500, {'radius': 70*10**6})]}
-# Pilote automatique pour les changement d'orbites
-mySat.add(Controler())
+                  'ctr-run-homhann': [(7500, {'radius': 12*10**6})]}
 
 simu.add(mySat)
 
-simu.run(duration_max=10, time_max=10000, infos=1/10)
+simu.run(duration_max=10, time_max=20000, infos=1/10)
 simu.plot(add={'circle': [8*10**6, 12*10**6]})
 #simu.animation(step=3)
