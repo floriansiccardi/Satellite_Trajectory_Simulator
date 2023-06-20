@@ -69,11 +69,10 @@ class Controler:
         r1, r2 = self.sat.get_radius(), args['radius']
         v = np.sqrt(np.dot(2 * self.G * self.planet.mass, np.array([1 / r1, 1 / r2]) - 1 / (r1 + r2)))
         self.do_homhann = self.power_for_speed(speed=v[0] - self.sat.get_speed())
-        self.do_homhann['radius'] = r2
         if self.do_homhann is None:
-            print(f"   ctr: impossible to reach an elliptical orbit")
+            print(f"     ctr: impossible to reach an elliptical orbit")
         else:
-            self.do_homhann['time'] = self.get_homhann_transfert_time(r1=r1, r2=r2)
+            self.do_homhann['time'], self.do_homhann['radius'] = self.get_homhann_transfert_time(r1=r1, r2=r2), r2
             data = self.power_for_rotation(period=-2 * self.do_homhann['time'])
             self.do_homhann['stop_at'] = self.do_homhann['time'] + self.simulator.time
             # power_already_in = Power "déjà comprise dans la alpha_point", donc à ne pas ajouter

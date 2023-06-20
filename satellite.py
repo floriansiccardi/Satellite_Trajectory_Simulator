@@ -70,6 +70,7 @@ class Satellite(Object):
         elif type(obj) == Controler: # Si l'objet est de type Controler
             # Définit le controleur pour le satellite
             self.controler = obj
+            self.controler.load(sat=self)
         else:
             print(f" > Impossible d'ajouter ce type d'objet à la simulation")
 
