@@ -1,6 +1,5 @@
 from simulator import Simulator
-from planet import Planet
-from satellite import Satellite
+from objects import Planet, Satellite
 from thruster import Thruster
 from controlers import Controler
 from LecteurYAML import LecteurYAML
