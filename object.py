@@ -73,7 +73,7 @@ class Object:
         for pln in planets:
             # Si la distance entre le satellite et la planète est inférieure au rayon de la planète
             if np.linalg.norm(self.x - pln.x) < pln.radius:
-                print(f"   Satellite {self.name} crashed into {pln.name} after {time()-self.simulator.t0} sec alive")
+                print(f"   Satellite {self.name} crashed into {pln.name} after {self.simulator.time} sec alive")
                 # Marquer le satellite comme détruit
                 self.alive = False
                 self.x = pln.x + (self.x - pln.x) / np.linalg.norm(self.x - pln.x) * pln.radius
