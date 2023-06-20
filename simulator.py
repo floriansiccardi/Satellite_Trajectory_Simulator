@@ -41,6 +41,8 @@ class Simulator:
             self.satellites.append(obj) # Ajout du Satellite à la liste des satellites de la simulation
             self.saves[obj.name] = [obj.x]
             self.saves_u[obj.name] = [obj.ux, obj.uy, obj.uz]
+            if not obj.controler is None:
+                obj.controler.load(sat=obj)
         elif type(obj) == Planet:
             obj.linkto(simulator=self) # Lie la planète à la simulation en cours
             self.planets.append(obj) # Ajout de la Planète à la liste des planètes de la simulation

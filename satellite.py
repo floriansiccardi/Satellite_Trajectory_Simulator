@@ -39,7 +39,8 @@ class Satellite(Object):
 
         # Controlers :
         self.controls = {}          # Manuals controls
-        self.controler = None       # Automatic controler
+        self.controler = Controler()       # Automatic controler
+        self.controler.load(sat=self)
 
     def set_scale(self, scale):
         """
@@ -70,6 +71,7 @@ class Satellite(Object):
         elif type(obj) == Controler: # Si l'objet est de type Controler
             # Définit le controleur pour le satellite
             self.controler = obj
+            self.controler.load(sat=self)
         else:
             print(f" > Impossible d'ajouter ce type d'objet à la simulation")
 
