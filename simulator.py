@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from objects import Planet, Satellite
+from saver import Saver
 import tools
 from time import time
 from datetime import timedelta
@@ -8,7 +10,7 @@ from datetime import timedelta
 
 class Simulator:
 
-    def __init__(self, dt=10):
+    def __init__(self, dt=20):
         """
         Initialise un objet de la classe simulation.
 
@@ -21,7 +23,7 @@ class Simulator:
         # Entités :
         self.satellites = [] # Liste des satellites présents dans la simulation
         self.planets = [] # Liste des planètes présentes dans la simulation
-        self.saves = {}
+        self.saves = Saver()
         self.saves_u = {}
 
         self.t0 = None # Temps initial de la simulation
@@ -38,7 +40,7 @@ class Simulator:
         if type(obj) == Satellite:
             obj.linkto(simulator=self) # Lie l'objet à la simulation en cours
             self.satellites.append(obj) # Ajout du Satellite à la liste des satellites de la simulation
-            self.saves[obj.name] = [obj.x]
+            self.saves.save(obj)
             self.saves_u[obj.name] = [obj.ux, obj.uy, obj.uz]
             if not obj.controler is None:
                 obj.controler.load(sat=obj)
@@ -134,7 +136,7 @@ class Simulator:
         # Avance chaque satellite d'un pas de temps
         for sat in self.satellites:
             sat.step(planets=self.planets, infos=infos)
-            self.saves[sat.name].append(sat.x)
+            self.saves.save(sat)
             self.saves_u[sat.name].append([sat.ux, sat.uy, sat.uz])
         # Mise à jour le temps de la simulation
         self.time += self.dt
@@ -146,7 +148,7 @@ class Simulator:
                 if self.time >= time:
                     if infos:
                         print(f"   | set {ctrl} to {value}" + ' '*3 + f"({self.time} sec)")
-                        setattr(sat, ctrl, value)
+                        setattr(self, ctrl, value)
                     self.controls[ctrl].remove(step)
         # Contrôles automatiques pour l'étape suivante
         for sat in self.satellites:
@@ -163,8 +165,6 @@ class Simulator:
         print(f"\n" + '-'*70 + "\n")
         print(f"   Fin de simuation après {self.iteration} itérations et {round(time() - self.t0, 2)} sec")
         print(f"   Durée simulée : {timedelta(seconds=self.iteration * self.dt)}\n\n" + '-'*70 + "\n")
-        for key in self.saves.keys():
-            self.saves[key] = np.array(self.saves[key])
 
     def plot(self, trajectory=True, add={}):
         """
@@ -181,8 +181,8 @@ class Simulator:
         for sat in self.satellites:
             fig, ax = sat.plot(fig=fig, ax=ax, display=False)
             if trajectory:
-                ax.plot(self.saves[sat.name][:, 0], self.saves[sat.name][:, 1], self.saves[sat.name][:, 2],
-                        '-' + sat.color)
+                x = self.saves[sat.name][['x1', 'x2', 'x3']]
+                ax.plot(x['x1'], x['x2'], x['x3'], '-' + sat.color)
         if add:
             for type in add.keys():
                 if type == 'circle':
@@ -222,14 +222,18 @@ class Simulator:
                 fig, ax = pln.plot(fig=fig, ax=ax, display=False)
             # Trace les satellites
             for sat in self.satellites:
-                sat.x = self.saves[sat.name][i]
+                x = self.saves[sat.name][['x1', 'x2', 'x3']][0:i+1]
+                print(x)
                 sat.ux, sat.uy, sat.uz = self.saves_u[sat.name][i]
                 fig, ax = sat.plot(fig=fig, ax=ax, display=False)
                 if trajectory:
                     # Trace la trajectoire du satellite jusqu'à l'itération actuelle
-                    traj = self.saves[sat.name][:i]
-                    ax.plot(traj[:, 0], traj[:, 1], traj[:, 2], '-' + sat.color)
+                    ax.plot(x['x1'], x['x2'], x['x3'], '-' + sat.color)
             # Pause pour permettre l'affichage du graphique
             plt.pause(0.01)
         plt.show()
 
+    def graph(self, y, x='time', scaled=False, sat=None):
+        if sat is None:
+            sat = self.satellites[0].name
+        self.saves.plot(x=x, y=y, sat=sat, scaled=scaled)
