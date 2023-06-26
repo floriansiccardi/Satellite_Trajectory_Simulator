@@ -159,8 +159,8 @@ class Controler:
 
                 delta_r = abs(round(100 * (prev_r - self.sat.get_radius()) / prev_r, 2))
                 delta_v = abs(round(100 * (prev_v - self.sat.get_speed()) / prev_v, 2))
-                print(f"   | GEO orbit forced ({delta_r}% for position, {delta_v}% for speed)")
-                print(f"     GEO orbit reached at {self.simulator.time} sec")
+                print(f"   | ctr: GEO orbit forced ({delta_r}% for position, {delta_v}% for speed)")
+                print(f"          GEO orbit reached at {self.simulator.time} sec")
         if not self.reach_sync is None:
             if self.reach_sync['step'] == 'stop':
                 if self.reach_sync['iteration'] == self.reach_sync['n']:
@@ -189,7 +189,7 @@ class Controler:
                         self.sat.get(self.do_homhann['rot']['thruster']).off()
                 if self.do_homhann['n'] == self.do_homhann['iteration']:
                     self.do_homhann['step'] = 'on_elliptic'
-                    print(f"   | elliptical orbit reached   ({self.simulator.time} sec)")
+                    print(f"   | ctr: elliptical orbit reached   ({self.simulator.time} sec)")
                     self.sat.get(self.do_homhann['thruster']).off()
                 else:
                     self.do_homhann['iteration'] += 1
@@ -197,9 +197,13 @@ class Controler:
                 r = self.do_homhann['radius']
                 dv = self.geo_speed(radius=r) - self.sat.get_speed()
                 self.do_homhann = self.power_for_speed(speed=dv)
-                self.do_homhann['radius'] = r
-                self.sat.get(self.do_homhann['thruster']).on(power=self.do_homhann['power'])
-                self.do_homhann['step'], self.do_homhann['iteration'] = 'reach_geo', 0
+                if self.do_homhann is None:
+                    print('   | ctr: impossible to reach second GEO')
+                    return
+                else:
+                    self.do_homhann['radius'] = r
+                    self.sat.get(self.do_homhann['thruster']).on(power=self.do_homhann['power'])
+                    self.do_homhann['step'], self.do_homhann['iteration'] = 'reach_geo', 0
             if self.do_homhann['step'] == 'reach_geo':
                 if self.do_homhann['iteration'] == self.do_homhann['n']:
                     self.sat.get(self.do_homhann['thruster']).off()
@@ -210,7 +214,7 @@ class Controler:
                     self.sat.v = self.geo_speed(radius=self.do_homhann['radius']) * np.cross(-ur, np.array([0, 0, 1]))
 
                     self.do_homhann = None
-                    print(f"   | successful Homhann transfer")
+                    print(f"   | ctr: successful Homhann transfer")
                 else:
                     self.do_homhann['iteration'] += 1
 

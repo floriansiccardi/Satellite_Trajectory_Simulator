@@ -150,6 +150,8 @@ class Satellite(Object):
         self.size = np.array(size)
         self.color = 'g'
 
+        self.radius, self.speed = None, None        # Évite de calculer 2 fois le rayon/vitesse dans une même itération
+
         # Positions de référence
         self.ux, self.uy, self.uz = np.array([1, 0, 0]), np.array([0, 1, 0]), np.array([0, 0, 1])
         self.planet_ref = planet_ref
@@ -275,8 +277,12 @@ class Satellite(Object):
         """
         # Vérifie si une planète de référence est définie
         if not self.planet_ref is None:
-            # Calcule la distance entre le satellite et sa planète de référence
-            return np.linalg.norm(self.x - self.planet_ref.x)
+            if self.radius is None:
+                # Calcule la distance entre le satellite et sa planète de référence
+                self.radius = np.linalg.norm(self.x - self.planet_ref.x)
+                return self.radius
+            else:
+                return self.radius
 
     def get_speed(self):
         """
@@ -284,8 +290,12 @@ class Satellite(Object):
 
         :return: (float) Vitesse du satellite.
         """
-        # Retourne la norme du vecteur vitesse du satellite
-        return np.linalg.norm(self.v)
+        if self.speed is None:
+            # Retourne la norme du vecteur vitesse du satellite
+            self.speed = np.linalg.norm(self.v)
+            return self.speed
+        else:
+            return self.speed
 
     def step(self, planets, infos=0):
         """
@@ -301,12 +311,15 @@ class Satellite(Object):
             # Calcul de l'accélération en ajoutant l'accélération gravitationnelle et la force divisée par la masse
             self.a = self.get_ag(planets=planets) + F / self.mass
             self.x, self.v, self.a = self.simulator.integrate(f=self.x, df=self.v, ddf=self.a)
+            self.radius, self.speed = None, None
             # Couple :
             # Calcul de l'accélération angulaire en divisant le couple par l'inertie
             self.a_ang = C / self.inertia
-            self.x_ang, self.v_ang, self.a_ang = self.simulator.integrate(f=zero(), df=self.v_ang, ddf=self.a_ang)
+            delta_ang = self.x_ang.copy()   # Sauvegarde de l'ancienne valeur
+            self.x_ang, self.v_ang, self.a_ang = self.simulator.integrate(f=self.x_ang, df=self.v_ang, ddf=self.a_ang)
+            delta_ang = self.x_ang - delta_ang
             # Mise à jour des axes du satellite
-            self.get_axes(dalpha=self.x_ang)
+            self.get_axes(dalpha=delta_ang)
             if not (self.islanded or self.istakingoff):
                 # Vérifie s'il y a eu une collision avec une planète
                 self.check_for_collision(planets=planets)
