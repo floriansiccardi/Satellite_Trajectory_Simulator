@@ -1,7 +1,8 @@
-from simulator import Simulator
-from objects import Planet, Satellite
-from thruster import Thruster
-from controlers import Controler
+from classes.simulator import Simulator
+from classes.planet import Planet
+from classes.satellite import Satellite
+from classes.thruster import Thruster
+from classes.controler import Controler
 from LecteurYAML import LecteurYAML
 import numpy as np
 

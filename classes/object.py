@@ -1,6 +1,6 @@
 import numpy as np
 from random import randint
-from tools import normalize, zero
+from classes.tools import normalize, zero
 
 
 class Object:

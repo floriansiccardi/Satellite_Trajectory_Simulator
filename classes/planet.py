@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from object import Object
+from classes.object import Object
 
 class Planet(Object):
 

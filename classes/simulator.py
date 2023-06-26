@@ -1,10 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from planet import Planet
-from satellite import Satellite
-from saver import Saver
-import tools
+from classes.planet import Planet
+from classes.satellite import Satellite
+from classes.saver import Saver
+from classes.tools import euler
 from time import time
 from datetime import timedelta
 
@@ -78,7 +78,7 @@ class Simulator:
         :param ddf: (float) Valeur de la dérivée seconde de la fonction.
         :return: (float) Résultat de l'intégration numérique.
         """
-        return tools.euler(f, df, ddf, self.dt)
+        return euler(f, df, ddf, self.dt)
 
     def count_alive(self):
         """

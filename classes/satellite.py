@@ -1,9 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from tools import zero, rotation_matrix, from_other_base
-from thruster import Thruster
-from controlers import Controler
-from object import Object
+from classes.tools import zero, rotation_matrix, from_other_base
+from classes.thruster import Thruster
+from classes.controler import Controler
+from classes.object import Object
 
 
 class Satellite(Object):

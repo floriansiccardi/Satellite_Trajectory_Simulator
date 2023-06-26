@@ -2,7 +2,7 @@ from classes.simulator import Simulator
 from classes.planet import Planet
 from classes.satellite import Satellite
 from classes.thruster import Thruster
-from classes.controlers import Controler
+from classes.controler import Controler
 import numpy as np
 
 simu = Simulator()

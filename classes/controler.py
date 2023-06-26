@@ -1,5 +1,5 @@
 import numpy as np
-from tools import normalize, sign
+from classes.tools import normalize, sign
 from math import ceil
 
 

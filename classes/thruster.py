@@ -1,5 +1,5 @@
 import numpy as np
-from tools import zero
+from classes.tools import zero
 
 
 class Thruster:
