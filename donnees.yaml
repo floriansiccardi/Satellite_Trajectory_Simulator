@@ -11,7 +11,7 @@ thuster_principal: 125000
 thuster_brake: 50000
 
 # données finales
-rayon_fin: 9000000 # rayon de l'orbite géostationnaire finale en m
+rayon_fin: 12000000 # rayon de l'orbite géostationnaire finale en m
 
 # données de simulation
 temps_simu: 15000 # temps de simulation en sec

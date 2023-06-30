@@ -67,4 +67,4 @@ simu.add(mySat)
 
 simu.run(duration_max=10, time_max=parsed_data['temps_simu'], infos=1/10)
 simu.plot(add={'circle': [parsed_data['rayon_init'], parsed_data['rayon_fin']]})
-# simu.animation(step=3)
+simu.animation(step=3)
