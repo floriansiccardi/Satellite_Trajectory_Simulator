@@ -30,7 +30,7 @@ simu.add(mySat)
 
 simu.run(duration_max=30, time_max=20000, infos=1/10)
 simu.plot(add={'circle': [9*10**6, 12*10**6]})
-#simu.animation(step=5)
+simu.animation(step=5)
 
 
 simu.graph(x='time', y='power')
