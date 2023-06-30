@@ -15,7 +15,8 @@ class Simulator:
         """
         Initialise un objet de la classe simulation.
 
-        :param dt: (float, optional) Interval de temps entre chaque itération de simulation en secondes.
+        :param dt: Interval de temps entre chaque itération de simulation en secondes (par défaut 20 sec).
+        :type dt: float
         """
         self.dt = dt # Intervalle de temps
         self.running = False # Indicateur d'exécution de la simulation
@@ -36,7 +37,8 @@ class Simulator:
         """
         Ajout d'un objet à la simulation.
 
-        :param obj: (Object) Objet à ajouter à la simulation.
+        :param obj: Objet à ajouter à la simulation.
+        :type obj: Class Satellite ou Class Planet.
         """
         if type(obj) == Satellite:
             obj.linkto(simulator=self) # Lie l'objet à la simulation en cours
@@ -55,8 +57,10 @@ class Simulator:
         """
         Récupère un objet de la simulation par son nom.
 
-        :param name: (str) Nom de l'objet à récupérer.
-        :return: (Object) Objet correspondant au nom donné, None si rien n'a été trouvé.
+        :param name: Nom de l'objet à récupérer.
+        :type name: string
+        :return: Objet correspondant au nom donné, None si rien n'a été trouvé.
+        :rtype: Class Planet or Class Satellite
         """
         # Parcours les listes des satellites et des planètes
         for entities in [self.satellites, self.planets]:
@@ -71,12 +75,16 @@ class Simulator:
 
     def integrate(self, f, df, ddf):
         """
-        Effectue l'intégration numérique d'une fonction à l'aide de la méthode d'Euler.
+        Effectue l'intégration numérique d'une fonction à l'aide de la méthode désirée.
 
-        :param f: (float) Valeur de la fonction à intégrer.
-        :param df: (float) Valeur de la dérivée de la fonction.
-        :param ddf: (float) Valeur de la dérivée seconde de la fonction.
-        :return: (float) Résultat de l'intégration numérique.
+        :param f: Valeur de la fonction à intégrer.
+        :type f: float or 1D-array
+        :param df: Valeur de la dérivée de la fonction.
+        :type df: float or 1D-array
+        :param ddf: Valeur de la dérivée seconde de la fonction.
+        :type ddf: float or 1D-array
+        :return: Résultat de l'intégration numérique.
+        :rtype: float or 1D-array
         """
         return euler(f, df, ddf, self.dt)
 
@@ -84,7 +92,8 @@ class Simulator:
         """
         Compte le nombre de satellites en vie dans la simulation.
 
-        :return: (int) Nombre de satellites en vie.
+        :return: Nombre de satellites en vie.
+        :rtype: int
         """
         # Initailisation du compte à 0
         count = 0
@@ -96,23 +105,29 @@ class Simulator:
         """
         Exécute la simulation pour une durée maximale donnée ou jusqu'à ce que certaines conditions soient remplies.
 
-        :param duration_max: (float, optional) Durée maximale de la simulation en secondes.
-        :param time_max: (float, optional) Temps maximal de la simulation en secondes.
-        :param infos: (int, optional) Fréquence d'affichage des informations pendant la simulation.
-        :return: (bool) True si la simulation s'est terminée normalement, False sinon.
+        :param duration_max: Durée maximale de la simulation en secondes.
+        :type duration_max: float
+        :param time_max: Temps maximal de la simulation en secondes.
+        :type time_max: float
+        :param infos: Fréquence d'affichage des informations pendant la simulation. Peut être défini comme une fraction
+                    (ex: 1/X) pour afficher uniquement X fois des informations durant la simulation.
+        :type infos: int or float
+        :return: True si la simulation s'est terminée normalement, False si tous les satellite sont morts.
+        :rtype: boolean
         """
         print(f"\n > Start simulation ...")
 
         self.running = True
         self.t0 = time()
-        # Calcul de la fréquence d'affichage des informations
+        # Calcul de la fréquence d'affichage des informations, dans le cas de infos = fraction.
         if infos < 1:
             infos = round(infos * time_max)
         next_info = 0
 
         while self.running:
+            # Réalise une itération de simulation
             self.step(infos)
-            # Affichage des informations
+            # Affichage des informations, si nécessaire
             if infos and self.time >= next_info:
                 next_info += infos
                 for sat in self.satellites:
@@ -131,8 +146,8 @@ class Simulator:
         """
         Effectue une avancée dans la simulation en faisant avancer chaque satellite d'un pas de temps.
 
-        :param infos: (bool, optional) Si True, affiche les informations de chaque satellite.
-                             Si False, n'affiche pas les informations.
+        :param infos: Si True, affiche les informations de chaque satellite. Si False, n'affiche pas les informations.
+        :type infos: boolean
         """
         # Avance chaque satellite d'un pas de temps
         for sat in self.satellites:
@@ -171,9 +186,12 @@ class Simulator:
         """
         Trace le graphique de la simulation en affichant les planètes, satellites et trajectoires des satellites.
 
-        :param trajectory: (bool, optional) Si True, affiche les trajectoires des satellites.
-                                            Si False, n'affiche pas les trajectoires des satellites.
-        :param add: (dict, optional) Liste des cercles à afficher.
+        :param trajectory: Si True, affiche les trajectoires des satellites.
+                           Si False, n'affiche pas les trajectoires des satellites.
+        :type trajectory: boolean
+        :param add: Liste des formes à afficher :
+                    - 'circle': [r1, r2, ...]
+        :type add: dict[list[float]]
         """
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
@@ -201,11 +219,13 @@ class Simulator:
         Anime la simulation en affichant une séquence de graphiques représentant l'évolution des positions des planètes
         et des satellites.
 
-        :param trajectory: (bool, optional) Si True, affiche les trajectoires des satellites.
-                                            Si False, n'affiche pas les trajectoires des satellites.
-        :param step: (int, optional) Pas de l'animation. Définit le nombre d'itérations entre chaque graphique affiché.
+        :param trajectory: Si True, affiche les trajectoires des satellites.
+                           Si False, n'affiche pas les trajectoires des satellites.
+        :type trajectory: boolean
+        :param step: Définit le nombre d'itérations entre chaque graphique affiché.
                      Par défaut, pas de 1, ce qui signifie qu'un graphique est affiché à chaque itération.
                      Une valeur plus élevée de `step` réduit le nombre total de graphiques affichés.
+        :type step: int
         """
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
@@ -234,7 +254,20 @@ class Simulator:
             plt.pause(0.01)
         plt.show()
 
-    def graph(self, y, x='time', scaled=False, sat=None):
+    def graph(self, y, x='time', scaled=True, sat=None):
+        """
+        Affiche le graphique de la donnée x en fonction de y, pour le satellite désiré.
+
+        :param y: Nom de la donnée en ordonnée
+        :type y: string
+        :param x: Nom de la donnée en absice (par défaut 'time')
+        :type x: sting
+        :param scaled: Dans le cas d'un graphique à plusieurs fonctions, normalise les fonctions pour qu'elles soient
+                       toutes affichées correctement (par défaut True).
+        :type scaled: boolean
+        :param sat: Nom du satellite désiré (Si None, prend le 1er dans la liste)
+        :type sat: string
+        """
         if sat is None:
             sat = self.satellites[0].name
         self.saves.plot(x=x, y=y, sat=sat, scaled=scaled)

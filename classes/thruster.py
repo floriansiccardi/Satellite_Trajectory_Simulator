@@ -8,11 +8,14 @@ class Thruster:
         """
         Initialise un objet de la classe thruster.
 
-        :param xr: (array-like) Vecteur représentant la position du propulseur par rapport au centre de masse de l'objet.
-        :param thrust_max: (array-like) Vecteur représentant la valeur maximale de la poussée du propulseur dans
-                                        chaque direction.
-        :param axe: (str, optional) Axe de direction du propulseur. Peut être 'x', 'y' ou 'z'.
-        :param name: (str, optional) Nom du propulseur.
+        :param xr: Vecteur représentant la position du propulseur par rapport au centre de masse de l'objet.
+        :type xr: 1D-array   (3 components)
+        :param thrust_max: Vecteur représentant la valeur maximale de la poussée du propulseur dans chaque direction.
+        :type thrust_max: 1D-array   (3 components)
+        :param axe: Axe de direction du propulseur. Peut être 'x', 'y' ou 'z'.
+        :type axe: str ('x', 'y' or 'z')
+        :param name: Nom du propulseur.
+        :type name: string
         """
         # Position du propulseur par rapport au centre de masse de l'objet
         self.xr = xr
@@ -38,8 +41,8 @@ class Thruster:
         """
         Active le propulseur avec une certaine puissance.
 
-        :param power: (float, optional) Puissance du propulseur, exprimée en fraction de pourcentage (0-1).
-                                        Par défaut, la puissance est à 100%.
+        :param power: Puissance du propulseur, exprimée en fraction de pourcentage (0-1) (Par défaut à 100%).
+        :type power: float (from 0 to 1 included)
         """
         self.power = max(min(power, 1), 0)
         self.thrust = np.dot(self.power * self.thrust_max, self.direction)
