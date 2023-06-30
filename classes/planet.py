@@ -8,12 +8,18 @@ class Planet(Object):
         """
        Initialise un objet de classe Planet.
 
-       :param radius: (float) Rayon de la planète.
-       :param mass: (float) Masse de la planète.
-       :param name: (str, optional) Nom de la planète (par défaut 'unnamed').
-       :param x: (tuple, optional) Coordonnées initiales de la planète (par défaut (0, 0, 0)).
-       :param v: (tuple, optional) Vitesse initiale de la planète (par défaut (0, 0, 0)).
-       :param a: (tuple, optional) Accélération initiale de la planète (par défaut (0, 0, 0)).
+       :param radius: Rayon de la planète.
+       :type radius: float
+       :param mass: Masse de la planète.
+       :type mass: float
+       :param name: Nom de la planète (par défaut 'unnamed').
+       :type name: string
+       :param x: Coordonnées initiales de la planète (par défaut (0, 0, 0)).
+       :type x: 1D-array or tuple   (3 components)
+       :param v: Vitesse initiale de la planète (par défaut (0, 0, 0)).
+       :type v: 1D-array or tuple   (3 components)
+       :param a: Accélération initiale de la planète (par défaut (0, 0, 0)).
+       :type a: 1D-array or tuple   (3 components)
        """
         super().__init__(mass=mass, x=x, v=v, a=a, name=name)
         self.radius = radius
@@ -22,11 +28,16 @@ class Planet(Object):
         """
         Trace la représentation en 3D de la planète.
 
-        :param fig: (Figure, optional) Objet de la figure matplotlib (par défaut None).
-        :param ax: (Axes3D, optional) Objet des axes matplotlib en 3D (par défaut None).
-        :param display: (bool, optional) Indique si le tracé doit être affiché (par défaut True).
-        :param N_points: (int, optional) Nombre de points à tracer sur la surface de la planète (par défaut 600).
-        :return: (Figure, Axes3D) Objet de la figure et des axes matplotlib.
+        :param fig: Objet de la figure matplotlib (Si None, création d'une nouvelle).
+        :type fig: figure    (from matplotlib)
+        :param ax: Objet des axes matplotlib en 3D (Si None, création d'une nouvelle).
+        :type ax: axe    (from matplotlib)
+        :param display: Indique si le tracé doit être affiché (par défaut True).
+        :type display: boolean
+        :param N_points: Nombre de points à tracer sur la surface de la planète (par défaut 600).
+        :type N_points: int
+        :return: Figure et des axes matplotlib mis à jour.
+        :rtype: figure, axe    (from matplotlib)
         """
         if fig is None or ax is None:
             fig = plt.figure()
