@@ -74,6 +74,13 @@ class Satellite(Object):
             # Définit le controleur pour le satellite
             self.controler = obj
             self.controler.load(sat=self)
+        elif obj == 'auto_build_thrusters': # Si l'utilisateur souhaite automatiquement ajouter les thrusters
+            self.add(Thruster(xr=(-self.size[0] / 2, 0, 0), thrust_max=12 * self.mass, axe='xp', name='main'))
+            self.add(Thruster(xr=(-self.size[0] / 3, self.size[1] / 2, 0), thrust_max=self.mass / 200, axe='ym',
+                               name='left'))
+            self.add(Thruster(xr=(-self.size[0] / 3, -self.size[1] / 2, 0), thrust_max=self.mass / 200, axe='yp',
+                               name='right'))
+            self.add(Thruster(xr=(-self.size[0] / 2, 0, 0), thrust_max=self.mass, axe='xp', name='break'))
         else:
             print(f" > Impossible d'ajouter ce type d'objet à la simulation")
 
