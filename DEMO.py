@@ -37,6 +37,7 @@ simu.run(duration_max=15, time_max=20000, infos=1/10)   # On affiche les infos t
 simu.plot(add={'circle': [9*10**6, 12*10**6]})          # Affichage de la trajectoire finale, depuis le temps initial
 #simu.animation(step=3)                                 # Mise en animation des résultats, avec accélération x3
 
+
 # Graphiques de l'évolutions des puissances des thrusters, du rayon et de la vitesse au cours du temps
 simu.graph(x='time', y='power')
 simu.graph(x='time', y='r')
