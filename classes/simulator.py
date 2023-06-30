@@ -224,7 +224,7 @@ class Simulator:
             # Trace les satellites
             for sat in self.satellites:
                 x = self.saves[sat.name][['x1', 'x2', 'x3']][0:i+1]
-                print(x)
+                sat.x = np.array([x['x1'].iloc[-1], x['x2'].iloc[-1], x['x3'].iloc[-1]])
                 sat.ux, sat.uy, sat.uz = self.saves_u[sat.name][i]
                 fig, ax = sat.plot(fig=fig, ax=ax, display=False)
                 if trajectory:

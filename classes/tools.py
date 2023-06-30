@@ -1,5 +1,5 @@
 import numpy as np
-from math import acos, asin, atan2
+from math import acos, asin, atan2, pi
 
 
 def euler(f, df, ddf, dt):
@@ -33,8 +33,24 @@ def from_other_base(point, base, base_center=(0, 0, 0)):
     return np.dot(np.array(base).T, np.array(point)) + np.array(base_center)
 
 
+def errors(u, v, normalize=True):
+    nu, nv = np.linalg.norm(u), np.linalg.norm(v)
+    if nu * nv == 0:
+        if normalize:
+            return 1, 1
+        else:
+            return 100, 100
+    else:
+        err_norm, err_ang = np.abs(nv - nu) / nv, np.arccos(np.dot(u, v) / (nu * nv)) / pi
+        if normalize:
+            return err_norm, err_ang
+        else:
+            return round(100 * err_norm, 1), round(100 * err_ang, 1)
+
+
 def zero(size=3):
     return np.array([0] * size)
+
 
 def sign(inp):
     return int(inp / np.abs(inp))
