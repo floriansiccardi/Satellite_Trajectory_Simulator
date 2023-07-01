@@ -4,6 +4,7 @@ ReadMe Développeur
 Le document suivant décrit globalement le fonctionnement du simulateur, à travers différents aspects :
 
 <br />**Méthode d'intégration**
+-------------------------------
 <br /><br />La méthode d'intégration est le schéma d'Euler avant :
 
 $\frac{\partial x}{\partial t}(t) = \lim_{dt\rightarrow 0} \frac{x(t+dt)-x(t)}{dt} \simeq  \frac{x(t+dt)-x(t)}{dt}$
