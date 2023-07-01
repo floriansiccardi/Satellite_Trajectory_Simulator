@@ -1,5 +1,5 @@
 ReadMe Développeur
-------------------
+==================
 
 Le document suivant décrit globalement le fonctionnement du simulateur, à travers différents aspects :
 
@@ -14,6 +14,7 @@ $\frac{\partial x}{\partial t}(t) = \lim_{dt\rightarrow 0} \frac{x(t+dt)-x(t)}{d
 
 ____________________
 <br />**Méthode itérative**
+---------------------------
 <br /><br />A chaque itération, le simulateur va procéder par les étapes suivantes :
 <br />&ensp;> Intégrer la position/vitesse des satellites. Pour chacun d'entre eux, le simulateur va :
 <br />&ensp;&ensp;&ensp;- Calculer la nouvelle accélération (gravité + propulseurs)
@@ -26,6 +27,7 @@ ____________________
 
 ____________________
 <br />**Classe Contrôleur**
+---------------------------
 <br /><br />La classe contrôleur permet de guider automatiquement le satellite selon les demandes de l'utilisateur. Il permet de gérer la puissance de tous les propulseurs, afin de réaliser les manoeuvres demandées par l'utilisateur.
 <br /><br />Les équations de calcul de puissances nécessaires à une accélération sont les suivantes :
 <br />$\Delta \dot{x}=\dot{x}(t+n\ dt)-\dot{x}(t)=n\ \ddot{x}\ dt$, pour $dt$ et $\ddot{x}$ constant sur les $n$ itérations
