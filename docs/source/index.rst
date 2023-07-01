@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Simulateur de changement orbital's documentation!
+Bienvenue sans la documentation de Simulateur de changement orbital !
 ===========================================================
 **Simulateur de changement orbital** est un projet python permettant de représenter le trajet d'un satellite entre deux orbites géostationnaires en 3 dimensions.
 
