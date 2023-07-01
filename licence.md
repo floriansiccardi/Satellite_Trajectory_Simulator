@@ -1,6 +1,5 @@
 Creative Commons Attribution - Pas d'Utilisation Commerciale - Partage dans les Mêmes Conditions 4.0 International (CC BY-NC-SA 4.0)
-
-====================================================================================================================================
+------------------------------------------------------------------------------------------------------------------------------------
 
 Vous êtes autorisé à :
 
@@ -16,4 +15,4 @@ Selon les conditions suivantes :
 Plus d'informations :
 https://creativecommons.org/licenses/by-nc-sa/4.0/deed.fr
 
-===================================================================================================================
+
