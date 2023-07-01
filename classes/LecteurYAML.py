@@ -33,7 +33,7 @@ class LecteurYAML:
         Valide si la valeur spécifiée est un nombre entier ou flottant.
 
         :param key: (str) Clé correspondant à la valeur en cours de validation.
-        :param value: Valeur en cours à valider.
+        :param value: Valeur à valider.
 
         :raises ValueError: Si la valeur n'est pas un nombre entier ou flottant.
         """
@@ -45,12 +45,24 @@ class LecteurYAML:
         Valide si la valeur spécifiée est un nombre entier.
 
         :param key: (str) Clé correspondant à la valeur en cours de validation.
-        :param value: Valeur en cours à valider.
+        :param value: Valeur à valider.
 
         :raises ValueError: Si la valeur n'est pas un nombre entier.
         """
         if not isinstance(value, int):
             raise ValueError(f"{key} doit être un nombre entier.")
+
+    def validate_numeric_value_bool(self, key, value):
+        """
+        Valide si la valeur spécifiée est un booléen.
+
+        :param key: (str) Clé correspondant à la valeur en cours de validation.
+        :param value: Valeur à valider.
+
+        :raises ValueError: Si la valeur n'est pas un booléen.
+        """
+        if not isinstance(value, bool):
+            raise ValueError(f"{key} doit être un booléen.")
 
     def inferiorite(self, key1, key2, val1, val2):
         """

@@ -19,10 +19,12 @@ parsed_data = parser.read_yaml()
 for key, value in parsed_data.items():
     if key == "time" or key == "temps_simu" or key == "pas":
         parser.validate_numeric_value_int(key, value)
-    if key == "satellite":
+    elif key == "satellite":
         parser.validate_numeric_value_int_float('poids', parsed_data[key]['poids'])
         for element in parsed_data[key]['taille']:
             parser.validate_numeric_value_int_float('taille', element)
+    elif key == "iss":
+        parser.validate_numeric_value_bool(key, value)
     else:
         parser.validate_numeric_value_int_float(key, value)
 
@@ -34,12 +36,6 @@ simu = Simulator(dt=20)
 
 # Ajout de la planète Terre :
 simu.add(Planet(name='Terre', radius=6371*10**3, mass=5.972*10**24))
-
-# Ajout (optionel) de l'ISS (en vert) :
-#simu.add(Satellite(name='ISS', mass=450000, size=(108, 75, 45),
-#                   x=(0, simu.get('Terre').radius+408*10**3, 0), v=(-7777.78, 0, 0)))
-#simu.get('ISS').set_scale(scale=5000)
-
 
 # Création de notre satellite mySat (en rouge) :
 mySat = Satellite(name='mySat', mass=parsed_data['satellite']['poids'], x=(simu.get('Terre').radius, 0, 0),
@@ -59,9 +55,15 @@ mySat.controls = {'ctr-run-takeoff': [(60, {})],
 # Une fois le satellite construit, on l'ajoute à la simulation
 simu.add(mySat)
 
+# Ajout (optionel) de l'ISS (en vert) :
+if parsed_data["iss"] :
+    simu.add(Satellite(name='ISS', mass=450000, size=(108, 75, 45),
+                      x=(0, simu.get('Terre').radius+408*10**3, 0), v=(-7777.78, 0, 0)))
+    simu.get('ISS').set_scale(scale=5000)
+
 # Lancement de la simulation, pour une durée max de 15 sec de calcul OU 20.000 sec dans la simulation
 simu.run(duration_max=30, time_max=parsed_data['temps_simu'], infos=1/10)       # On affiche les infos tous les 10%
-simu.animation(step=parsed_data['pas'])                                         # Mise en animation des résultats, avec accélération xpas
+# simu.animation(step=parsed_data['pas'])                                         # Mise en animation des résultats, avec accélération xpas
 simu.plot(add={'circle': [parsed_data['rayon_init'], parsed_data['rayon_fin']]})# Affichage de la trajectoire finale, depuis le temps initial
 
 # Graphiques de l'évolutions des puissances des thrusters, du rayon et de la vitesse au cours du temps

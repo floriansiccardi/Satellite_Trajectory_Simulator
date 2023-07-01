@@ -5,11 +5,11 @@
 
 Welcome to Simulateur de changement orbital's documentation!
 ===========================================================
-**Simulateur de changement orbital** est un projet python permettant de simuler le changment d'orbite d'un satellite.
+**Simulateur de changement orbital** est un projet python permettant de représenter le trajet d'un satellite entre deux orbites géostationnaires en 3 dimensions.
 
 .. note::
+   Projet sous licence **Creative Commons Attribution - Pas d'Utilisation Commerciale - Partage dans les Mêmes Conditions Conditions 4.0 International** (CC BY-NC-SA 4.0).
 
-   This project is under active development.
 
 .. toctree::
    :maxdepth: 15
